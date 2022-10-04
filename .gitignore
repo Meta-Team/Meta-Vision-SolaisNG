@@ -5,6 +5,7 @@ data/params_backup
 data/videos
 data/images
 *.icloud
+.vscode/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### C++ template

@@ -91,7 +91,7 @@ tools and unit tests.
 ## CMake Options for Jetson Nano (Ubuntu)
 To let CMake find ProtoBuf installed by Snap, the installation path needs to be supplied manually:
 ```
--DCMAKE_PREFIX_PATH=/snap/protobuf/current
+-CMAKE_PREFIX_PATH=/snap/protobuf/current
 ```
 
 # Other CMake Options
