@@ -1,4 +1,5 @@
 cmake-build-*
+build
 .idea/
 data/params/backup
 data/params_backup

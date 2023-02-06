@@ -15,7 +15,9 @@ endif ()
 # libTerminalSocket
 if (Boost_FOUND)
     add_library(libTerminalSocket TerminalSocket.cpp)
-    target_link_libraries(libTerminalSocket PUBLIC ${Boost_SYSTEM_LIBRARY})
+    target_link_libraries(libTerminalSocket PUBLIC
+            ${mingw_winsock} ${mingw_mswsock}  ${Boost_SYSTEM_LIBRARY}
+            )
 else()
     message("=> Target libTerminalSocket is not available to build. Depends: Boost")
 endif ()
@@ -25,7 +27,11 @@ if (Boost_FOUND)
     if(DEFINED SERIAL_DEVICE)
         message("Serial device is set as \"${SERIAL_DEVICE}\"")
     else()
-        set(SERIAL_DEVICE "/dev/ttyTHS1")
+        if(MINGW)
+            set(SERIAL_DEVICE "COM4")
+        else()
+            set(SERIAL_DEVICE "/dev/ttyTHS1")
+        endif()
         message("Use default serial device \"${SERIAL_DEVICE}\"")
     endif ()
 

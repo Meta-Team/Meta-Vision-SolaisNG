@@ -21,12 +21,18 @@ void VideoSet::reloadVideoList() {
     videos.clear();
     if (fs::is_directory(videoSetRoot)) {
         for (const auto &entry : fs::directory_iterator(videoSetRoot)) {
+#ifdef BOOST_OS_WINDOWS
+            if (wcscmp(entry.path().extension().c_str(), L".mkv") == 0 ||
+                wcscmp(entry.path().extension().c_str(), L".avi") == 0) {
+#else
             if (strcasecmp(entry.path().extension().c_str(), ".mkv") == 0 ||
                 strcasecmp(entry.path().extension().c_str(), ".avi") == 0) {
+#endif
                 videos.emplace_back(entry.path().filename().string());
             }
         }
     }
+
 }
 
 cv::Mat VideoSet::getVideoFirstFrame(const std::string &videoName, const ParamSet &params) const {

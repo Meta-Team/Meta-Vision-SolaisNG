@@ -9,13 +9,14 @@
 #include <iomanip>
 #include <google/protobuf/util/json_util.h>
 #include <boost/asio/ip/host_name.hpp>
+#include <fstream>
 
 namespace meta {
 
 // PARAM_SET_ROOT defined in CMakeLists.txt
 ParamSetManager::ParamSetManager()
         : paramSetRoot(fs::path(PARAM_SET_ROOT) / "params"), defaultParamSetName(boost::asio::ip::host_name()) {
-
+    std::cout << "Root"<<paramSetRoot<<std::endl;
     std::cout << "ParamSetManager: using default ParamSet " << defaultParamSetName << ".json" << std::endl;
 
     if (!fs::exists(paramSetRoot / ".." / "params_backup")) {
@@ -88,7 +89,11 @@ void ParamSetManager::reloadParamSetList() {
     }
 
     for (const auto &entry : fs::directory_iterator(paramSetRoot)) {
+#ifdef BOOST_OS_WINDOWS
+        if (wcscmp(entry.path().extension().c_str(), L".json") == 0) {
+#else
         if (strcasecmp(entry.path().extension().c_str(), ".json") == 0) {
+#endif
             paramsSetNames.emplace_back(entry.path().stem().string());
         }
     }

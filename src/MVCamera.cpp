@@ -7,6 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "Utilities.h"
 
+
 namespace meta {
 
 bool MVCamera::open(const package::ParamSet &params) {

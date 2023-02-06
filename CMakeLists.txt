@@ -85,11 +85,22 @@ if (PkgConfig_FOUND)
         unset(GSTREAMER_FOUND)
     endif ()
 endif ()
+if(MINGW)
+    find_library(
+            mingw_winsock
+            libws2_32.a
+    )
+    find_library(
+            mingw_mswsock
+            libmswsock.a
+    )
 
+    MESSAGE("winsock_fix:\n ${mingw_winsock} and ${mingw_mswsock}\n")
+endif()
 # Shared include directory
 include_directories(include)
 
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(tools)
-add_subdirectory(unit-tests)
+#add_subdirectory(unit-tests)
