@@ -72,12 +72,14 @@ void ParamSetManager::reloadParamSetList() {
         params.set_allocated_small_armor_aspect_ratio(allocFloatRange(1.25, 2));
         params.set_allocated_large_armor_aspect_ratio(allocFloatRange(2, 5));
         params.set_allocated_manual_pnp_rect_max_height(allocToggledInt(false, 50));
+        params.set_dist_manual_offset(45);
 
         params.set_allocated_small_armor_size(allocIntPair(120, 60));
         params.set_allocated_large_armor_size(allocIntPair(240, 60));
 
         params.set_pulse_min_x_offset(500);
         params.set_pulse_max_y_offset(300);
+        params.set_pulse_min_interval(43);
         params.set_allocated_tk_threshold(allocIntPair(3, 1500));
         params.set_tk_compute_period_using_pulses(2);
         params.set_tk_target_dist_offset(-50);
