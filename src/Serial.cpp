@@ -5,7 +5,6 @@
 #include "Serial.h"
 #include "CRC.h"
 #include <iostream>
-
 namespace meta {
 
 Serial::Serial(boost::asio::io_context &ioContext)
@@ -18,8 +17,9 @@ Serial::Serial(boost::asio::io_context &ioContext)
         std::cerr << "Failed to open serial device \"" << SERIAL_DEVICE << "\": " << ec.message() << std::endl;
         std::exit(1);
     }
-
+#ifndef BOOST_OS_WINDOWS
     ::tcflush(serial.lowest_layer().native_handle(), TCIOFLUSH);  // flush input and output
+#endif
     serial.set_option(boost::asio::serial_port::baud_rate(SERIAL_BAUD_RATE));
     serial.set_option(boost::asio::serial_port::flow_control(boost::asio::serial_port::flow_control::none));
     serial.set_option(boost::asio::serial_port_base::character_size(8));

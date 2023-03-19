@@ -9,13 +9,14 @@
 #include <iomanip>
 #include <google/protobuf/util/json_util.h>
 #include <boost/asio/ip/host_name.hpp>
+#include <fstream>
 
 namespace meta {
 
 // PARAM_SET_ROOT defined in CMakeLists.txt
 ParamSetManager::ParamSetManager()
         : paramSetRoot(fs::path(PARAM_SET_ROOT) / "params"), defaultParamSetName(boost::asio::ip::host_name()) {
-
+    std::cout << "Root"<<paramSetRoot<<std::endl;
     std::cout << "ParamSetManager: using default ParamSet " << defaultParamSetName << ".json" << std::endl;
 
     if (!fs::exists(paramSetRoot / ".." / "params_backup")) {
@@ -71,12 +72,14 @@ void ParamSetManager::reloadParamSetList() {
         params.set_allocated_small_armor_aspect_ratio(allocFloatRange(1.25, 2));
         params.set_allocated_large_armor_aspect_ratio(allocFloatRange(2, 5));
         params.set_allocated_manual_pnp_rect_max_height(allocToggledInt(false, 50));
+        params.set_dist_manual_offset(45);
 
         params.set_allocated_small_armor_size(allocIntPair(120, 60));
         params.set_allocated_large_armor_size(allocIntPair(240, 60));
 
         params.set_pulse_min_x_offset(500);
         params.set_pulse_max_y_offset(300);
+        params.set_pulse_min_interval(43);
         params.set_allocated_tk_threshold(allocIntPair(3, 1500));
         params.set_tk_compute_period_using_pulses(2);
         params.set_tk_target_dist_offset(-50);
@@ -88,7 +91,11 @@ void ParamSetManager::reloadParamSetList() {
     }
 
     for (const auto &entry : fs::directory_iterator(paramSetRoot)) {
+#ifdef BOOST_OS_WINDOWS
+        if (wcscmp(entry.path().extension().c_str(), L".json") == 0) {
+#else
         if (strcasecmp(entry.path().extension().c_str(), ".json") == 0) {
+#endif
             paramsSetNames.emplace_back(entry.path().stem().string());
         }
     }

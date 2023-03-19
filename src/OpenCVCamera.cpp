@@ -36,7 +36,12 @@ void OpenCVCamera::readFrameFromCamera(const package::ParamSet &params) {
     capInfoSS.str(std::string());  // clear capInfoSS
 
     // Open the camera in the same thread
+    // use V4L2 backend to capture video on Linux, while on Windows CAP_ANY is selected
+    #ifdef BOOST_OS_WINDOWS
     cap.open(params.camera_id(), cv::CAP_ANY);
+    #else
+    cap.open(params.camera_id(), cv::CAP_V4L2);
+    #endif
     if (!cap.isOpened()) {
         capInfoSS << "Failed to open camera " << params.camera_id() << "\n";
         std::cerr << capInfoSS.rdbuf();

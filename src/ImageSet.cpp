@@ -39,8 +39,11 @@ int ImageSet::switchImageSet(const std::string &dataSetName) {
     std::cout << "ImageSet: loading data set " << currentImageSetPath << "..." << std::endl;
 
     for (const auto &entry : fs::directory_iterator(currentImageSetPath)) {
+#ifdef BOOST_OS_WINDOWS
+        if (wcscmp(entry.path().extension().c_str(), L".jpg") == 0) {
+#else
         if (strcasecmp(entry.path().extension().c_str(), ".jpg") == 0) {
-
+#endif
             fs::path xmlFile = fs::path(currentImageSetPath) / entry.path().stem();
             xmlFile += ".xml";
 

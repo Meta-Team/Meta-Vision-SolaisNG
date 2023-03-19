@@ -7,7 +7,9 @@
 #define MAX_CROSS_LINE 9
 
 //相机的句柄类型定义
+
 typedef int CameraHandle;
+#ifndef __MINGW32__
 typedef int INT;
 typedef int LONG;
 typedef unsigned int UINT;
@@ -30,6 +32,9 @@ typedef unsigned int ULONG;
 typedef void* LPVOID;
 typedef unsigned char UCHAR;
 typedef void* HMODULE;
+#else
+#include <windef.h>
+#endif
 
 #define TRUE 1
 #define FALSE 0
