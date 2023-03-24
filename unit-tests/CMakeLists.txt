@@ -61,12 +61,13 @@ else ()
 endif ()
 
 # TensorRTUnitTest
-if (OpenCV_FOUND AND TensorRT_FOUND)
+if (OpenCV_FOUND AND TensorRT_FOUND AND CUDAToolkit_FOUND)
     add_executable(TensorRTUnitTest TensorRTUnitTest.cpp)
     target_link_libraries(TensorRTUnitTest
             ${OpenCV_LIBRARIES}
-            ${TensorRT_LIBRARIES}
+            nvinfer cudart
+            TensorRTX
             )
 else ()
-    message("=> Target TensorRTUnitTest is not available to build. Depends: OpenCV, TensorRT")
+    message("=> Target TensorRTUnitTest is not available to build. Depends: OpenCV, TensorRT, CUDAToolkit")
 endif ()
