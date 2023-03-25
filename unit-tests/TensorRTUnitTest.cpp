@@ -200,6 +200,9 @@ int main(int argc, char *argv[]) {
 //            cv::imwrite("_" + img_name_batch[j], img_batch[j]);
 //        }
         cv::imshow("Detection Result", img_batch[0]);
+        char c=(char)cv::waitKey(1);
+        if(c=='q')
+            break;
     }
 
 
@@ -209,9 +212,9 @@ int main(int argc, char *argv[]) {
     delete[] cpu_output_buffer;
     cuda_preprocess_destroy();
 
-//    delete context;
-//    delete engine;
-//    delete runtime;
+    delete context;
+    delete engine;
+    delete runtime;
 
     return 0;
 }

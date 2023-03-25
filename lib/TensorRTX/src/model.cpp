@@ -362,7 +362,8 @@ ICudaEngine* build_det_engine(unsigned int maxBatchSize, IBuilder* builder, IBui
   std::cout << "Build engine successfully!" << std::endl;
 
   // Don't need the network any more
-  network->destroy();
+//  network->destroy();
+    delete network;
 
   // Release host memory
   for (auto& mem : weightMap) {
@@ -466,8 +467,8 @@ ICudaEngine* build_det_p6_engine(unsigned int maxBatchSize, IBuilder* builder, I
   std::cout << "Build engine successfully!" << std::endl;
 
   // Don't need the network any more
-  network->destroy();
-
+//  network->destroy();
+    delete network;
   // Release host memory
   for (auto& mem : weightMap) {
     free((void*)(mem.second.values));
@@ -525,8 +526,8 @@ ICudaEngine* build_cls_engine(unsigned int maxBatchSize, IBuilder* builder, IBui
   std::cout << "Build engine successfully!" << std::endl;
 
   // Don't need the network any more
-  network->destroy();
-
+//  network->destroy();
+    delete network;
   // Release host memory
   for (auto& mem : weightMap) {
     free((void*)(mem.second.values));
@@ -616,8 +617,8 @@ ICudaEngine* build_seg_engine(unsigned int maxBatchSize, IBuilder* builder, IBui
   std::cout << "Build engine successfully!" << std::endl;
 
   // Don't need the network any more
-  network->destroy();
-
+//  network->destroy();
+    delete network;
   // Release host memory
   for (auto& mem : weightMap) {
     free((void*)(mem.second.values));
