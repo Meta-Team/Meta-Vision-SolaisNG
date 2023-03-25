@@ -89,17 +89,17 @@ void infer(IExecutionContext& context, cudaStream_t& stream, void** gpu_buffers,
 
 int main(int argc, char *argv[]) {
 
-//    if (argc != 2) {
-//        std::cerr << "Usage: " << argv[0] << " <video file>" << std::endl;
-//        return -1;
-//    }
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <video file>" << std::endl;
+        return -1;
+    }
 
-//    std::string videoPath = argv[1];
-//    cv::VideoCapture cap(videoPath);
-//    if (!cap.isOpened()) {
-//        std::cerr << "Failed to open video file: " << videoPath << std::endl;
-//        return -1;
-//    }
+    std::string videoPath = argv[1];
+    cv::VideoCapture cap(videoPath);
+    if (!cap.isOpened()) {
+        std::cerr << "Failed to open video file: " << videoPath << std::endl;
+        return -1;
+    }
 
 //    std::vector<std::string> classNames = readClassNames(classNamesFile);
 
@@ -116,12 +116,13 @@ int main(int argc, char *argv[]) {
     float* cpu_output_buffer = nullptr;
     prepare_buffers(engine, &gpu_buffers[0], &gpu_buffers[1], &cpu_output_buffer);
 
-    std::vector<std::string> file_names;
-    if (read_files_in_dir(img_dir.c_str(), file_names) < 0) {
-        std::cerr << "read_files_in_dir failed." << std::endl;
-        return -1;
-    }
+//    std::vector<std::string> file_names;
+//    if (read_files_in_dir(img_dir.c_str(), file_names) < 0) {
+//        std::cerr << "read_files_in_dir failed." << std::endl;
+//        return -1;
+//    }
 
+    /*
     for (size_t i = 0; i < file_names.size(); i += kBatchSize) {
         // Get a batch of images
         std::vector<cv::Mat> img_batch;
@@ -153,6 +154,54 @@ int main(int argc, char *argv[]) {
             cv::imwrite("_" + img_name_batch[j], img_batch[j]);
         }
     }
+    */
+
+//    double fps = cap.get(cv::CAP_PROP_FPS);
+//    namedWindow("Detection Result", cv::WINDOW_AUTOSIZE);
+//    int frameCounter = 0;
+//    int tick = 0;
+//    double elapsedTime;
+//    double currentFPS;
+//    double freq = cv::getTickFrequency();
+
+    while (true) {
+
+        // Read a frame
+        cv::Mat frame;
+        cap >> frame;
+
+        // Break the loop if the end of the video is reached
+        if (frame.empty()) break;
+
+        // Get a batch of images
+        std::vector<cv::Mat> img_batch;
+        std::vector<std::string> img_name_batch;
+        img_batch.push_back(frame);
+
+        // Preprocess
+        cuda_batch_preprocess(img_batch, gpu_buffers[0], kInputW, kInputH, stream);
+
+        // Run inference
+        auto start = std::chrono::system_clock::now();
+        infer(*context, stream, (void **) gpu_buffers, cpu_output_buffer, kBatchSize);
+        auto end = std::chrono::system_clock::now();
+        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+                  << "ms" << std::endl;
+
+        // NMS
+        std::vector<std::vector<Detection>> res_batch;
+        batch_nms(res_batch, cpu_output_buffer, img_batch.size(), kOutputSize, kConfThresh, kNmsThresh);
+
+        // Draw bounding boxes
+        draw_bbox(img_batch, res_batch);
+
+        // Save images
+//        for (size_t j = 0; j < img_batch.size(); j++) {
+//            cv::imwrite("_" + img_name_batch[j], img_batch[j]);
+//        }
+        cv::imshow("Detection Result", img_batch[0]);
+    }
+
 
     cudaStreamDestroy(stream);
     cudaFree(gpu_buffers[0]);
@@ -160,6 +209,9 @@ int main(int argc, char *argv[]) {
     delete[] cpu_output_buffer;
     cuda_preprocess_destroy();
 
+//    delete context;
+//    delete engine;
+//    delete runtime;
 
     return 0;
 }
