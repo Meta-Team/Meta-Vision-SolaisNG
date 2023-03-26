@@ -15,10 +15,13 @@ Also, we Vision group mainly deal with lights in the images :)
 * OpenCV 4
 * Boost
 * ZBar (for ArmorSolverUnitTest)
+* CUDA >= 10.2 or 11.8
+* cuDNN >= 8.x
+* TensorRT >= 8.2.1 (used for YOLOv5)
 
 # Setup on Jetson Nano (Ubuntu)
 
-Ubuntu 18.04 for Jetson Nano has OpenCV 4.1.1 pre-installed.
+Ubuntu 18.04 for Jetson Nano has OpenCV 4.1.1 and CUDA related packages pre-installed.
 
 ## Install or Upgrade CMake
 ```shell
@@ -76,6 +79,67 @@ sudo apt-get install libzbar-dev libzbar0
 ```shell
 brew install cmake opencv boost zbar protobuf
 ```
+
+Note: Since no one from our team uses macOS currently, we're unable to provide detailed instructions on how to install
+CUDA, cuDNN and TensorRT on macOS. To our knowledge, it's **no longer possible** to install CUDA on macOS since CUDA 10.2.
+
+# Setup on WSL (Ubuntu 22.04)
+
+As nVidia published their Jetson ORIN Nano, we think it's better to use Ubuntu 22.04 as our testing environment. 
+However, most of the parts are identical between different versions of Ubuntu, so the following steps should possibly 
+also work on Ubuntu 18.04 and 20.04.
+
+## Install CMake
+
+Newer version of CMake is already in APT repository of Ubuntu 22.04. To install it:
+
+```shell
+sudo apt install cmake
+```
+
+To check CMake's version:
+
+```shell
+cmake --version
+```
+
+## Install Boost
+
+Similarly, it's longer needed to use an external source to install Boost on Ubuntu 22.04.
+
+```shell
+sudo apt install libboost-all-dev
+```
+
+## Install Protocol Buffer
+
+Protocol Buffer is also available in APT repository of Ubuntu 22.04.
+
+```shell
+sudo apt install libprotobuf-dev protobuf-compiler
+```
+
+## Install ZBar
+
+```shell
+sudo apt-get install libzbar-dev libzbar0
+```
+
+## Install CUDA 11.8
+
+To install CUDA 11.8 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html).
+
+## Install cuDNN 8.6.0
+
+To install cuDNN 8.6.0 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html).
+
+## Install TensorRT 8.5.3
+
+To install TensorRT 8.5.3 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html).
+
+## Install OpenCV 4.7.0
+
+OpenCV must be built from source on Ubuntu 22.04. To install OpenCV 4.7.0, follow the instructions on [OpenCV's website](https://docs.opencv.org/4.7.0/d7/d9f/tutorial_linux_install.html).
 
 # CMake Build System
 This project uses CMake build system. The main design idea is to make dependencies flexible: if dependencies of a
