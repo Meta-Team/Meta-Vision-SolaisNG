@@ -15,7 +15,7 @@ const static char* kInputTensorName = "data";
 const static char* kOutputTensorName = "prob";
 
 // Detection model and Segmentation model' number of classes
-constexpr static int kNumClass = 80;
+constexpr static int kNumClass = 2;
 
 // Classfication model's number of classes
 constexpr static int kClsNumClass = 1000;

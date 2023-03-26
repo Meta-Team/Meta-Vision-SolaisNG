@@ -12,4 +12,4 @@ target_include_directories(TensorRTX INTERFACE ${PROJECT_SOURCE_DIR}/plugin)
 
 target_link_libraries(TensorRTX PRIVATE ${OpenCV_LIBRARIES} nvinfer cudart)
 
-set_target_properties(TensorRTX PROPERTIES CUDA_ARCHITECTURES all-major)
+set_target_properties(TensorRTX PROPERTIES CUDA_ARCHITECTURES "86")

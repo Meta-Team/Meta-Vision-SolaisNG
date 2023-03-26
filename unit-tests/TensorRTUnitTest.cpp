@@ -20,9 +20,8 @@
 using namespace nvinfer1;
 
 //const std::string classNamesFile = "./nn-models/coco.names";
-const std::string enginePath = "/home/niceme/Meta-Vision-SolaisNG/nn-models/yolov5s.engine";
+const std::string enginePath = "/home/niceme/Meta-Vision-SolaisNG/nn-models/rm_yolov5s.engine";
 static Logger gLogger;
-const std::string img_dir = "/home/niceme/test_images";
 const static int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
 
 
@@ -116,45 +115,17 @@ int main(int argc, char *argv[]) {
     float* cpu_output_buffer = nullptr;
     prepare_buffers(engine, &gpu_buffers[0], &gpu_buffers[1], &cpu_output_buffer);
 
-//    std::vector<std::string> file_names;
-//    if (read_files_in_dir(img_dir.c_str(), file_names) < 0) {
-//        std::cerr << "read_files_in_dir failed." << std::endl;
+    int frameWidth = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    int frameHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    double fps = cap.get(cv::CAP_PROP_FPS);
+
+    // Prepare Output Video
+//    cv::VideoWriter outputVideo("Output.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(frameWidth, frameHeight));
+//
+//    if (!outputVideo.isOpened()) {
+//        std::cout << "Error opening the output video file." << std::endl;
 //        return -1;
 //    }
-
-    /*
-    for (size_t i = 0; i < file_names.size(); i += kBatchSize) {
-        // Get a batch of images
-        std::vector<cv::Mat> img_batch;
-        std::vector<std::string> img_name_batch;
-        for (size_t j = i; j < i + kBatchSize && j < file_names.size(); j++) {
-            cv::Mat img = cv::imread(img_dir + "/" + file_names[j]);
-            img_batch.push_back(img);
-            img_name_batch.push_back(file_names[j]);
-        }
-
-        // Preprocess
-        cuda_batch_preprocess(img_batch, gpu_buffers[0], kInputW, kInputH, stream);
-
-        // Run inference
-        auto start = std::chrono::system_clock::now();
-        infer(*context, stream, (void**)gpu_buffers, cpu_output_buffer, kBatchSize);
-        auto end = std::chrono::system_clock::now();
-        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-
-        // NMS
-        std::vector<std::vector<Detection>> res_batch;
-        batch_nms(res_batch, cpu_output_buffer, img_batch.size(), kOutputSize, kConfThresh, kNmsThresh);
-
-        // Draw bounding boxes
-        draw_bbox(img_batch, res_batch);
-
-        // Save images
-        for (size_t j = 0; j < img_batch.size(); j++) {
-            cv::imwrite("_" + img_name_batch[j], img_batch[j]);
-        }
-    }
-    */
 
 //    double fps = cap.get(cv::CAP_PROP_FPS);
 //    namedWindow("Detection Result", cv::WINDOW_AUTOSIZE);
@@ -195,15 +166,18 @@ int main(int argc, char *argv[]) {
         // Draw bounding boxes
         draw_bbox(img_batch, res_batch);
 
-        // Save images
-//        for (size_t j = 0; j < img_batch.size(); j++) {
-//            cv::imwrite("_" + img_name_batch[j], img_batch[j]);
-//        }
+        // Display Video
         cv::imshow("Detection Result", img_batch[0]);
         char c=(char)cv::waitKey(1);
         if(c=='q')
             break;
+
+        // Write into Video
+//        outputVideo << img_batch[0];
     }
+
+    cap.release();
+//    outputVideo.release();
 
 
     cudaStreamDestroy(stream);
