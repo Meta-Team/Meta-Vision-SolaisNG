@@ -127,13 +127,13 @@ int main(int argc, char *argv[]) {
 //        return -1;
 //    }
 
-//    double fps = cap.get(cv::CAP_PROP_FPS);
-//    namedWindow("Detection Result", cv::WINDOW_AUTOSIZE);
-//    int frameCounter = 0;
-//    int tick = 0;
-//    double elapsedTime;
-//    double currentFPS;
-//    double freq = cv::getTickFrequency();
+    fps = cap.get(cv::CAP_PROP_FPS);
+    namedWindow("Detection Result", cv::WINDOW_AUTOSIZE);
+    int frameCounter = 0;
+    int tick = 0;
+    double elapsedTime;
+    double currentFPS;
+    double freq = cv::getTickFrequency();
 
     while (true) {
 
@@ -156,8 +156,8 @@ int main(int argc, char *argv[]) {
         auto start = std::chrono::system_clock::now();
         infer(*context, stream, (void **) gpu_buffers, cpu_output_buffer, kBatchSize);
         auto end = std::chrono::system_clock::now();
-        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << "ms" << std::endl;
+//        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+//                  << "ms" << std::endl;
 
         // NMS
         std::vector<std::vector<Detection>> res_batch;
@@ -172,12 +172,22 @@ int main(int argc, char *argv[]) {
         if(c=='q')
             break;
 
+        frameCounter++;
+        if (frameCounter % 10 == 0) {
+            tick = cv::getTickCount() - tick;
+            elapsedTime = tick / freq;
+            currentFPS = 10 / elapsedTime;
+            std::cout << "Frame rate of processing: " << currentFPS << " FPS" << std::endl;
+            tick = cv::getTickCount();
+        }
+
         // Write into Video
 //        outputVideo << img_batch[0];
     }
 
     cap.release();
 //    outputVideo.release();
+    cv::destroyAllWindows();
 
 
     cudaStreamDestroy(stream);
