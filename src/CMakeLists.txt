@@ -128,3 +128,13 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
 else()
     message("=> Target libSolais is not available to build. Depends: Boost, OpenCV, Protobuf, libParameters, libTerminalSocket, libSerial, libArmorSolver")
 endif()
+
+# libNanoDet
+if (OpenCV_FOUND AND TensorRT_FOUND AND CUDAToolkit_FOUND)
+    option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
+    add_library(libNanoDet SHARED NanoDet_TensorRT.cpp)
+    target_link_libraries(libNanoDet ${OpenCV_LIBRARIES} nvinfer cudart)
+    target_include_directories(libNanoDet INTERFACE include)
+else()
+    message("=> Target libNanoDet is not available to build. Depends: OpenCV")
+endif()

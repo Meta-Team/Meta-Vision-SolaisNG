@@ -1,2 +1,2 @@
 add_subdirectory(mvsdk)
-add_subdirectory(TensorRTX)
+add_subdirectory(TensorRTX_YOLOv5)

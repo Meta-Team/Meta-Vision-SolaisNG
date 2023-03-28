@@ -149,15 +149,16 @@ int main(int argc, char *argv[]) {
         std::vector<std::string> img_name_batch;
         img_batch.push_back(frame);
 
+
         // Preprocess
         cuda_batch_preprocess(img_batch, gpu_buffers[0], kInputW, kInputH, stream);
 
         // Run inference
-        auto start = std::chrono::system_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
         infer(*context, stream, (void **) gpu_buffers, cpu_output_buffer, kBatchSize);
-        auto end = std::chrono::system_clock::now();
-//        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-//                  << "ms" << std::endl;
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+                  << "ms" << std::endl;
 
         // NMS
         std::vector<std::vector<Detection>> res_batch;
