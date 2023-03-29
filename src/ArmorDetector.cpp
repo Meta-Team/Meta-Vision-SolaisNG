@@ -343,6 +343,17 @@ std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect(const Mat &img) 
     return acceptedArmors;
 }
 
+std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect_NG(const cv::Mat &img) {
+
+    Mat inputBlob = dnn::blobFromImage(img, 1.0, Size(320, 320), Scalar(0, 0, 0), true, false);
+
+//    net.setInput(inputBlob, "data");
+//    Mat detection = net.forward("detection_out");
+
+    // todo: implement code for reading model output
+    
+}
+
 std::vector<ArmorDetector::DetectedArmor>::iterator
 ArmorDetector::filterAcceptedArmorsToRemove(std::vector<DetectedArmor> &acceptedArmors) const {
     for (auto it = acceptedArmors.begin(); it != acceptedArmors.end(); ++it) {

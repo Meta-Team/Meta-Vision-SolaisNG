@@ -285,7 +285,7 @@ int video_demo(NanoDet_TensorRT& detector, const char* path)
         cv::Mat resized_img;
         resize_uniform(image, resized_img, cv::Size(416, 416), effect_roi);
         auto results = detector.detect(resized_img, 0.4, 0.5);
-//        draw_bboxes(image, results, effect_roi);
+        draw_bboxes(image, results, effect_roi);
         char c=(char)cv::waitKey(1);
         if(c=='q')
             break;

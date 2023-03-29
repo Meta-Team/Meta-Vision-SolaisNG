@@ -267,9 +267,9 @@ void NanoDet_TensorRT::prepare_buffer() {
 
 void NanoDet_TensorRT::infer() {
     cudaMemcpyAsync(gpu_buffers[0], cpu_input_buffer, input_buffer_size, cudaMemcpyHostToDevice, stream);
-    cudaStreamSynchronize(stream);
-//    context->enqueueV2(gpu_buffers, stream, nullptr); // Async execution
-    context->executeV2(gpu_buffers); // Synchroneous execution
+//    cudaStreamSynchronize(stream);
+    context->enqueueV2(gpu_buffers, stream, nullptr); // Async execution
+//    context->executeV2(gpu_buffers); // Synchroneous execution
     cudaMemcpyAsync(cpu_output_buffer, gpu_buffers[1], output_buffer_size, cudaMemcpyDeviceToHost, stream);
     cudaStreamSynchronize(stream);
 }
