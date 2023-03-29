@@ -9,11 +9,16 @@
 #include <mutex>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/dnn/dnn.hpp>
+#include <NvInfer.h>
+#include <cuda_runtime_api.h>
 
 namespace meta {
 
 class ArmorDetector {
 public:
+
+//    ArmorDetector() : net(cv::dnn::readNetFromONNX("/path/to/onnx")) {}
 
     void setParams(const ParamSet &p) { params = p; }
 
@@ -30,6 +35,7 @@ public:
     };
 
     std::vector<DetectedArmor> detect(const cv::Mat &img);
+    std::vector<DetectedArmor> detect_NG(const cv::Mat &img);
 
     static float normalizeLightAngle(float angle) { return angle <= 90 ? angle : 180 - angle; }
 
@@ -43,6 +49,7 @@ private:
     cv::Mat imgColor;
     std::vector<cv::RotatedRect> lightRects;
     cv::Mat imgLights;
+//    cv::dnn::Net net;
 
     static void drawRotatedRect(cv::Mat &img, const cv::RotatedRect &rect, const cv::Scalar &boarderColor);
 
