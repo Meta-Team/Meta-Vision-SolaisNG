@@ -58,18 +58,13 @@ else ()
 endif ()
 
 # Find TensorRT and CUDA
-enable_language(CUDA)
 find_package(CUDAToolkit)
-set(TensorRT_INCLUDE_DIRS /usr/include/x86_64-linux-gnu)
-set(TensorRT_LIBRARY_DIR /usr/lib/x86_64-linux-gnu)
-set(TensorRT_FOUND TRUE)
-if (TensorRT_FOUND)
+if (CUDAToolkit_FOUND)
+    enable_language(CUDA)
     include_directories(${CUDAToolkit_INCLUDE_DIRS})
     link_directories(${CUDAToolkit_LIBRARY_DIR})
-    include_directories(${TensorRT_INCLUDE_DIRS})
-    link_directories(${TensorRT_LIBRARY_DIR})
 else ()
-    message(WARNING "TensorRT not found so some targets may not be available")
+    message(WARNING "CUDA and TensorRT not found so some targets may not be available")
 endif()
 
 # Find GStreamer

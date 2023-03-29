@@ -61,7 +61,7 @@ else ()
 endif ()
 
 # TensorRTUnitTest
-if (OpenCV_FOUND AND TensorRT_FOUND AND CUDAToolkit_FOUND)
+if (OpenCV_FOUND AND CUDAToolkit_FOUND)
     add_executable(TensorRTUnitTest TensorRTX_YOLOv5UnitTest.cpp)
     target_link_libraries(TensorRTUnitTest
             ${OpenCV_LIBRARIES}
