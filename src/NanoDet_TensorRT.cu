@@ -53,10 +53,12 @@ NanoDet_TensorRT::NanoDet_TensorRT() : stream(nullptr)
 NanoDet_TensorRT::~NanoDet_TensorRT()
 {
     cudaStreamDestroy(stream);
-    cudaFree(gpu_buffers[0]);
-    cudaFree(gpu_buffers[1]);
-    cudaFreeHost(cpu_input_buffer);
-    cudaFreeHost(cpu_output_buffer);
+//    cudaFree(gpu_buffers[0]);
+//    cudaFree(gpu_buffers[1]);
+//    cudaFreeHost(cpu_input_buffer);
+//    cudaFreeHost(cpu_output_buffer);
+    cudaFreeHost(zero_copy_buffers[0]);
+    cudaFreeHost(zero_copy_buffers[1]);
 }
 
 bool NanoDet_TensorRT::loadEngine(const std::string& engineFilePath) {
@@ -89,27 +91,52 @@ bool NanoDet_TensorRT::loadEngine(const std::string& engineFilePath) {
     return true;
 }
 
-void NanoDet_TensorRT::preprocess(const cv::Mat& image) const {
-//    std::vector<float> result(1 * 3 * input_size_ * input_size_);
-//    float *data = result.data();
-    float* data = cpu_input_buffer;
-    cv::Mat flt_img;
-    flt_img = image.clone();
-    cv::resize(flt_img, flt_img, cv::Size(input_size_, input_size_));
-    flt_img.convertTo(flt_img, CV_32FC3, 1 / 1.0);
-    std::vector<cv::Mat> split_img(3);
-    cv::split(flt_img, split_img);
-    int channelLength = input_size_ * input_size_;
-    const float img_mean[3] = { 103.53f, 116.28f, 123.675f };
-    const float img_std[3] = { 0.017429f, 0.017507f, 0.017125f };
-    for (int i = 0; i < 3; ++i) {
-        split_img[i] = (split_img[i] - img_mean[i]) * img_std[i];
-        memcpy(data, split_img[i].data, channelLength * sizeof(float));
-        data += channelLength;
+__global__ void preprocess_kernel(float *data, const float *image_data, int input_size, int channelLength, const float *img_mean, const float *img_std) {
+//    unsigned int c = blockIdx.x;
+    unsigned int idx = threadIdx.x + blockDim.x * blockIdx.y;
+
+    if (idx < channelLength) {
+        int row = idx / input_size;
+        int col = idx % input_size;
+//        int offset = c * channelLength + row * input_size + col;
+        int offset = idx;
+
+        float pixel = image_data[offset];
+        data[offset] = (pixel - img_mean[0]) * img_std[0];
     }
 }
 
-std::vector<BoxInfo> NanoDet_TensorRT::detect(const cv::Mat& image, float score_threshold, float nms_threshold) {
+void NanoDet_TensorRT::preprocess(cv::Mat& image) const {
+    float* data = zero_copy_buffers[0];
+    float* data2 = new float[10];
+    image.convertTo(image, CV_32FC3, 1 / 1.0);
+    std::vector<cv::Mat> split_img(3);
+    cv::split(image, split_img);
+    int channelLength = input_size_ * input_size_;
+    static const float img_mean[3] = { 103.53f, 116.28f, 123.675f };
+    static const float img_std[3] = { 0.017429f, 0.017507f, 0.017125f };
+//    #pragma omp parallel for default(none) shared(split_img, data, img_mean, img_std, channelLength)
+//    for (int i = 0; i < 3; ++i) {
+//        float* local_data = cpu_data + i * channelLength;
+//        split_img[i] = (split_img[i] - img_mean[i]) * img_std[i];
+//        memcpy(local_data, split_img[i].data, channelLength * sizeof(float));
+//    }
+//    for (int c = 0; c < 3; c++) {
+//        for (int i = 0; i < channelLength; ++i) {
+//            float pixel_value = image.at<cv::Vec3f>(i / input_size_, i % input_size_)[c];
+//            data[i] = (pixel_value - img_mean[c]) * img_std[c];
+//        }
+//        data += channelLength;
+//    }
+    dim3 blockDim(256);
+//    dim3 gridDim(3, (channelLength + blockDim.x - 1) / blockDim.x);
+    dim3 gridDim(3 * (channelLength + blockDim.x - 1) / blockDim.x);
+//    preprocess_kernel<<<gridDim, blockDim, 0, stream>>>(data, reinterpret_cast<const float *>(image.data), input_size_, channelLength, img_mean, img_std);
+//    preprocess_kernel<<<gridDim, blockDim>>>(data, image.data, input_size_, channelLength, img_mean, img_std);
+    cudaStreamSynchronize(stream);
+}
+
+std::vector<BoxInfo> NanoDet_TensorRT::detect(cv::Mat& image, float score_threshold, float nms_threshold) {
     // Preprocess
     auto t_start_pre = std::chrono::high_resolution_clock::now();
     preprocess(image);
@@ -128,7 +155,11 @@ std::vector<BoxInfo> NanoDet_TensorRT::detect(const cv::Mat& image, float score_
     auto r_start = std::chrono::high_resolution_clock::now();
     std::vector<std::vector<BoxInfo>> results;
     results.resize(this->num_class_);
+    t_start = std::chrono::high_resolution_clock::now();
     postprocess(score_threshold, results);
+    t_end = std::chrono::high_resolution_clock::now();
+    auto total_post = std::chrono::duration<float, std::milli>(t_end - t_start).count();
+    std::cout << "true detection postprocess take: " << total_post << " ms." << std::endl;
     std::vector<BoxInfo> dets;
     for (auto & result : results) {
         nms(result, nms_threshold);
@@ -145,7 +176,7 @@ std::vector<BoxInfo> NanoDet_TensorRT::detect(const cv::Mat& image, float score_
 
 void NanoDet_TensorRT::postprocess(float threshold, std::vector<std::vector<BoxInfo>>& results)
 {
-    if (cpu_output_buffer == nullptr)
+    if (zero_copy_buffers[1] == nullptr)
         return;
     int total_idx = 0;
     for (int stage_idx = 0; stage_idx < (int)strides_.size(); stage_idx++)
@@ -162,7 +193,7 @@ void NanoDet_TensorRT::postprocess(float threshold, std::vector<std::vector<BoxI
             float score = -0.0f;
             int cur_label = 0;
             for (int label = 0; label < this->num_class_; label++) {
-                float cur_score = cpu_output_buffer[idx * (num_class_ + 4 * (reg_max_ + 1))+ label];
+                float cur_score = zero_copy_buffers[1][idx * (num_class_ + 4 * (reg_max_ + 1))+ label];
                 if (cur_score > score) {
                     score = cur_score;
                     cur_label = label;
@@ -170,7 +201,7 @@ void NanoDet_TensorRT::postprocess(float threshold, std::vector<std::vector<BoxI
             }
             if (score > threshold) {
                 //std::cout << "label:" << cur_label << " score:" << score << std::endl;
-                const float* bbox_pred = &cpu_output_buffer[idx * (num_class_ + 4 * (reg_max_ + 1)) + num_class_];
+                const float* bbox_pred = &zero_copy_buffers[1][idx * (num_class_ + 4 * (reg_max_ + 1)) + num_class_];
                 results[cur_label].push_back(this->disPred2Bbox(bbox_pred, cur_label, score, col, row, stride));
                 // debug_heatmap.at<cv::Vec3b>(row, col)[0] = 255;
                 // cv::imshow("debug", debug_heatmap);
@@ -250,27 +281,38 @@ void NanoDet_TensorRT::prepare_buffer() {
     nvinfer1::Dims input_dims = engine->getBindingDimensions(0);
     nvinfer1::DataType input_dtype = engine->getBindingDataType(0);
     input_buffer_size = volume(input_dims) * meta::getTrtElementSize(input_dtype);
-    cudaMalloc(&gpu_buffers[0], input_buffer_size);
+//    cudaMalloc(&gpu_buffers[0], input_buffer_size);
 
     // Malloc Input Buffer on CPU
-    cudaMallocHost(&cpu_input_buffer, input_buffer_size);
+//    cudaMallocHost(&cpu_input_buffer, input_buffer_size);
+
+    // Zero Copy Input Buffer (only for Jetson)
+    cudaHostAlloc(&zero_copy_buffers[0], input_buffer_size, cudaHostAllocMapped);
+    cudaError_t error = cudaHostGetDevicePointer(&gpu_buffers[0], zero_copy_buffers[0], cudaMemAttachGlobal);
+    if (error != cudaSuccess) {
+        std::cout << "cudaHostGetDevicePointer failed: " << cudaGetErrorString(error) << std::endl;
+    }
 
     // Malloc Output Buffer
     nvinfer1::Dims output_dims = engine->getBindingDimensions(1);
     nvinfer1::DataType output_dtype = engine->getBindingDataType(1);
     output_buffer_size = volume(output_dims) * meta::getTrtElementSize(output_dtype);
-    cudaMalloc(&gpu_buffers[1], input_buffer_size);
+//    cudaMalloc(&gpu_buffers[1], input_buffer_size);
 
     // Malloc Output Buffer on CPU
-    cudaMallocHost(&cpu_output_buffer, output_buffer_size);
+//    cudaMallocHost(&cpu_output_buffer, output_buffer_size);
+
+    // Zero Copy Output Buffer (only for Jetson)
+    cudaHostAlloc(&zero_copy_buffers[1], output_buffer_size, cudaHostAllocMapped);
+    cudaHostGetDevicePointer(&gpu_buffers[1], zero_copy_buffers[1], cudaMemAttachGlobal);
 }
 
 void NanoDet_TensorRT::infer() {
-    cudaMemcpyAsync(gpu_buffers[0], cpu_input_buffer, input_buffer_size, cudaMemcpyHostToDevice, stream);
+//    cudaMemcpyAsync(gpu_buffers[0], cpu_input_buffer, input_buffer_size, cudaMemcpyHostToDevice, stream);
 //    cudaStreamSynchronize(stream);
-    context->enqueueV2(gpu_buffers, stream, nullptr); // Async execution
-//    context->executeV2(gpu_buffers); // Synchroneous execution
-    cudaMemcpyAsync(cpu_output_buffer, gpu_buffers[1], output_buffer_size, cudaMemcpyDeviceToHost, stream);
+    context->enqueueV2((void **) zero_copy_buffers, stream, nullptr); // Async execution
+//    context->executeV2(gpu_buffers); // Synchronous execution
+//    cudaMemcpyAsync(cpu_output_buffer, gpu_buffers[1], output_buffer_size, cudaMemcpyDeviceToHost, stream);
     cudaStreamSynchronize(stream);
 }
 

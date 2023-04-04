@@ -47,6 +47,15 @@ else()
     message("=> Target libSerial is not available to build. Depends: Boost")
 endif ()
 
+if (OpenCV_FOUND AND CUDAToolkit_FOUND)
+    option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
+    add_library(libYOLODet SHARED YOLOv5_TensorRT.cpp)
+    target_link_libraries(libYOLODet ${OpenCV_LIBRARIES} nvinfer cudart fmt::fmt)
+#    target_include_directories(libYOLODet INTERFACE include)
+else()
+    message("=> Target libNanoDet is not available to build. Depends: OpenCV")
+endif()
+
 # libArmorSolver
 if (OpenCV_FOUND)
     add_library(libArmorSolver PositionCalculator.cpp)
@@ -86,7 +95,7 @@ endif()
 #endif ()
 
 # libSolais
-if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND TARGET libTerminalSocket AND TARGET libArmorSolver AND TARGET libSerial)
+if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND TARGET libTerminalSocket AND TARGET libArmorSolver AND TARGET libSerial AND TARGET libYOLODet)
     add_library(libSolais
             ArmorDetector.cpp
             AimingSolver.cpp
@@ -105,6 +114,7 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
             libSerial
             libArmorSolver
             libCamera
+#            libYOLODet
             )
     target_compile_definitions(libSolais PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 
@@ -130,9 +140,9 @@ else()
 endif()
 
 # libNanoDet
-if (OpenCV_FOUND AND TensorRT_FOUND AND CUDAToolkit_FOUND)
+if (OpenCV_FOUND AND CUDAToolkit_FOUND)
     option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
-    add_library(libNanoDet SHARED NanoDet_TensorRT.cpp)
+    add_library(libNanoDet SHARED NanoDet_TensorRT.cu)
     target_link_libraries(libNanoDet ${OpenCV_LIBRARIES} nvinfer cudart)
     target_include_directories(libNanoDet INTERFACE include)
 else()

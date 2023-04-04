@@ -74,6 +74,12 @@ if (OpenCV_FOUND AND CUDAToolkit_FOUND)
             nvinfer cudart
             libNanoDet
             )
+    add_executable(CudaTest CudaTest.cu)
+    target_link_libraries(CudaTest
+            ${OpenCV_LIBRARIES}
+            nvinfer cudart
+            )
 else ()
     message("=> Target TensorRTUnitTest is not available to build. Depends: OpenCV, TensorRT, CUDAToolkit")
 endif ()
+

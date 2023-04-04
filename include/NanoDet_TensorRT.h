@@ -36,11 +36,11 @@ class NanoDet_TensorRT {
 public:
     NanoDet_TensorRT();
     ~NanoDet_TensorRT();
-    std::vector<BoxInfo> detect(const cv::Mat& image, float score_threshold, float nms_threshold);
+    std::vector<BoxInfo> detect(cv::Mat& image, float score_threshold, float nms_threshold);
     bool loadEngine(const std::string& engineFilePath);
 
 private:
-    void preprocess(const cv::Mat& image) const;
+    void preprocess(cv::Mat& image) const;
     void prepare_buffer();
     void infer();
     void postprocess(float threshold, std::vector<std::vector<BoxInfo>> &results);
@@ -54,9 +54,10 @@ private:
     std::unique_ptr<nvinfer1::ICudaEngine> engine;
     std::unique_ptr<nvinfer1::IExecutionContext> context;
     cudaStream_t stream{};
-    void* gpu_buffers[2] = {nullptr, nullptr};
-    float* cpu_input_buffer = nullptr;
-    float* cpu_output_buffer = nullptr;
+    float* gpu_buffers[2] = {nullptr, nullptr};
+//    float* cpu_input_buffer = nullptr;
+//    float* cpu_output_buffer = nullptr;
+    float* zero_copy_buffers[2] = {nullptr, nullptr};
     int64_t input_buffer_size = 0;
     int64_t output_buffer_size = 0;
 };

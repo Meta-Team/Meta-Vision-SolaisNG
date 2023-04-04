@@ -191,8 +191,8 @@ void Executor::runStreamingDetection(InputSource *source) {
 
 
         // Run armor detection algorithm
-        // std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect(img);
-        std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect_NG(img);
+        std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect(img);
+//        std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect_NG(img);
 
         // Solve armor positions
         std::vector<AimingSolver::ArmorInfo> armors;
