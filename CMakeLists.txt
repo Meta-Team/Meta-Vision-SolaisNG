@@ -63,6 +63,7 @@ if (CUDAToolkit_FOUND)
     enable_language(CUDA)
     include_directories(${CUDAToolkit_INCLUDE_DIRS})
     link_directories(${CUDAToolkit_LIBRARY_DIR})
+    option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 else ()
     message(WARNING "CUDA and TensorRT not found so some targets may not be available")
 endif()
@@ -107,6 +108,19 @@ if(MINGW)
 
     MESSAGE("winsock_fix:\n ${mingw_winsock} and ${mingw_mswsock}\n")
 endif()
+
+#FIND_PACKAGE(OpenMP)
+#if (OPENMP_FOUND)
+#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+#endif ()
+
+find_package(fmt)
+if (fmt_FOUND)
+else()
+    message(WARNING "fmt not found so some targets may not be available")
+endif ()
+
 # Shared include directory
 include_directories(include)
 

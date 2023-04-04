@@ -20,7 +20,7 @@
 using namespace nvinfer1;
 
 //const std::string classNamesFile = "./nn-models/coco.names";
-const std::string enginePath = "/home/niceme/Meta-Vision-SolaisNG/nn-models/rm_yolov5s.engine";
+const std::string enginePath = "/home/nvidia/CLionProjects/Meta-Vision-SolaisNG/nn-models/rm_yolov5s.engine";
 static Logger gLogger;
 const static int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
 
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 //    }
 
     fps = cap.get(cv::CAP_PROP_FPS);
-    namedWindow("Detection Result", cv::WINDOW_AUTOSIZE);
+//    namedWindow("Detection Result", cv::WINDOW_AUTOSIZE);
     int frameCounter = 0;
     int tick = 0;
     double elapsedTime;
@@ -154,11 +154,11 @@ int main(int argc, char *argv[]) {
         cuda_batch_preprocess(img_batch, gpu_buffers[0], kInputW, kInputH, stream);
 
         // Run inference
-        auto start = std::chrono::high_resolution_clock::now();
+//        auto start = std::chrono::high_resolution_clock::now();
         infer(*context, stream, (void **) gpu_buffers, cpu_output_buffer, kBatchSize);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << "ms" << std::endl;
+//        auto end = std::chrono::high_resolution_clock::now();
+//        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+//                  << "ms" << std::endl;
 
         // NMS
         std::vector<std::vector<Detection>> res_batch;

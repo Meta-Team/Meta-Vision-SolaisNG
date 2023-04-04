@@ -81,7 +81,6 @@ namespace meta
             case nvinfer1::DataType::kFLOAT: return 4;
             case nvinfer1::DataType::kHALF: return 2;
             case nvinfer1::DataType::kBOOL:
-            case nvinfer1::DataType::kUINT8:
             case nvinfer1::DataType::kINT8: return 1;
         }
         throw std::runtime_error("Invalid DataType.");

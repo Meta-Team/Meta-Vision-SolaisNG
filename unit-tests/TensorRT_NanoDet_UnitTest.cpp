@@ -283,12 +283,15 @@ int video_demo(NanoDet_TensorRT& detector, const char* path)
         cap >> image;
         object_rect effect_roi{};
         cv::Mat resized_img;
+        auto t_start = std::chrono::high_resolution_clock::now();
         resize_uniform(image, resized_img, cv::Size(416, 416), effect_roi);
+        auto t_end = std::chrono::high_resolution_clock::now();
+        std::cout << "resize time: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << " ms" << std::endl;
         auto results = detector.detect(resized_img, 0.4, 0.5);
-        draw_bboxes(image, results, effect_roi);
-        char c=(char)cv::waitKey(1);
-        if(c=='q')
-            break;
+//        draw_bboxes(image, results, effect_roi);
+//        char c=(char)cv::waitKey(1);
+//        if(c=='q')
+//            break;
 
         frameCounter++;
         if (frameCounter % 10 == 0) {
@@ -343,7 +346,7 @@ int main(int argc, char** argv)
     int mode = atoi(argv[1]);
 
     // Load your TensorRT .engine file here
-    std::string engine_file_path = "/home/niceme/nanodet-plus-m-1.5x_416.engine";
+    std::string engine_file_path = "/home/nvidia/nanodet-plus-m_416.engine";
     NanoDet_TensorRT detector;
     if (!detector.loadEngine(engine_file_path))
     {
