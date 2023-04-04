@@ -11,15 +11,16 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <NvInfer.h>
 #include <cuda_runtime_api.h>
-//#include "YOLOv5_TensorRT.h"
+#include "YOLOv5_TensorRT.h"
 
 namespace meta {
 
 class ArmorDetector {
 public:
 
-//    ArmorDetector() : net(cv::dnn::readNetFromONNX("/path/to/onnx")) {}
+    ArmorDetector() : yoloModel(std::string("/home/nvidia/tmp/tmp.pS4QeSxQaM/nn-models/model-opt-4.onnx")) {
 
+    }
     void setParams(const ParamSet &p) { params = p; }
 
     const ParamSet &getParams() const { return params; }
@@ -28,8 +29,8 @@ public:
         std::array<cv::Point2f, 4> points;
         cv::Point2f center;
         bool largeArmor = false;
-        int number = 0;                 // unused yet
-        std::array<int, 2> lightIndex;  // left, right
+        int number = 0;                 // not implemented yet
+        std::array<int, 2> lightIndex;  // left, right ; already deprecated after YOLO model
         float lightAngleDiff;           // absolute value, non-negative
         float avgLightAngle;
     };
@@ -49,7 +50,7 @@ private:
     cv::Mat imgColor;
     std::vector<cv::RotatedRect> lightRects;
     cv::Mat imgLights;
-//    cv::dnn::Net net;
+    YOLODet yoloModel;
 
     static void drawRotatedRect(cv::Mat &img, const cv::RotatedRect &rect, const cv::Scalar &boarderColor);
 

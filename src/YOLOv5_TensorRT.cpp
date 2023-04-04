@@ -112,7 +112,7 @@ namespace meta {
         cudaStreamDestroy(stream);
         cudaFree(device_buffer[output_idx]);
         cudaFree(device_buffer[input_idx]);
-        engine->destroy();
+        delete engine;
     }
 
     void YOLODet::build_engine_from_onnx(const std::string &onnx_file) {
@@ -153,10 +153,10 @@ namespace meta {
         std::cout << "[INFO]: max workspace size will use all of free gpu mem" << std::endl;
         config->setMaxWorkspaceSize(free);
         TRT_ASSERT((engine = builder->buildEngineWithConfig(*network, *config)) != nullptr);
-        config->destroy();
-        parser->destroy();
-        network->destroy();
-        builder->destroy();
+        delete config;
+        delete parser;
+        delete network;
+        delete builder;
     }
 
     void YOLODet::build_engine_from_cache(const std::string &cache_file) {
@@ -170,7 +170,7 @@ namespace meta {
         auto runtime = createInferRuntime(gLogger);
         TRT_ASSERT(runtime != nullptr);
         TRT_ASSERT((engine = runtime->deserializeCudaEngine(buffer.get(), sz)) != nullptr);
-        runtime->destroy();
+        delete runtime;
     }
 
     void YOLODet::cache_engine(const std::string &cache_file) {
@@ -178,7 +178,6 @@ namespace meta {
         TRT_ASSERT(engine_buffer != nullptr);
         std::ofstream ofs(cache_file, std::ios::binary);
         ofs.write(static_cast<const char *>(engine_buffer->data()), engine_buffer->size());
-//        engine_buffer->destroy();
         delete engine_buffer;
     }
 
