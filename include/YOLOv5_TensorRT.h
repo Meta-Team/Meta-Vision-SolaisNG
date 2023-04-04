@@ -12,20 +12,25 @@
 
 namespace meta {
     class YOLODet {
-        struct alignas(4) bbox_t {
-            cv::Point2f pts[4]; // [pt0, pt1, pt2, pt3]
-            float confidence;
-            int color_id; // 0: blue, 1: red, 2: gray
-            int tag_id;   // 0: guard, 1-5: number, 6: base
-
-            bool operator==(const bbox_t&) const = default;
-            bool operator!=(const bbox_t&) const = default;
-        };
 
         static constexpr int TOPK_NUM = 128;
         static constexpr float KEEP_THRES = 0.1f;
 
     public:
+        struct alignas(4) bbox_t {
+            std::array<cv::Point2f, 4> pts; // [pt0, pt1, pt2, pt3]
+            float confidence;
+            int color_id; // 0: blue, 1: red, 2: gray
+            int tag_id;   // 0: guard, 1-5: number, 6: base
+
+            bool operator==(const bbox_t& other) const {
+                return (pts == other.pts) && (confidence == other.confidence) && (color_id == other.color_id) && (tag_id == other.tag_id);
+            }
+            bool operator!=(const bbox_t& other) const {
+                return (pts != other.pts) || (confidence != other.confidence) || (color_id != other.color_id) || (tag_id != other.tag_id);
+            }
+        };
+
         explicit YOLODet(const std::string &onnx_file);
 
         ~YOLODet();
@@ -35,6 +40,7 @@ namespace meta {
         YOLODet operator=(const YOLODet &) = delete;
 
         std::vector<bbox_t> operator()(const cv::Mat &src) const;
+
 
     private:
         void build_engine_from_onnx(const std::string &onnx_file);

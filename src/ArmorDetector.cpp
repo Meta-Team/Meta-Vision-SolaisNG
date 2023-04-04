@@ -668,7 +668,59 @@ std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect_NG(const cv::Mat
         }
     }
 
-    return acceptedArmors;
+    std::vector<YOLODet::bbox_t> detectResults = yoloModel(imgOriginal);
+    std::vector<DetectedArmor> acceptedArmors_NG;
+
+    int cnt = 0;
+    for (auto armor : detectResults) {
+        std::cout << "Armor " << cnt << ": " << armor.color_id << " " << armor.pts[0] << " " << armor.pts[1] << " " << armor.pts[2] << " " << armor.pts[3] << std::endl;
+        cnt++;
+        if (armor.color_id == !(params.enemy_color())) {
+            std::array<Point2f, 4> armorPoints = armor.pts;
+
+            auto leftVector = armorPoints[1] - armorPoints[0];      // pointing up
+            auto rightVector = armorPoints[2] - armorPoints[3];     // pointing up
+            auto topVector = armorPoints[2] - armorPoints[1];       // pointing right
+            auto bottomVector = armorPoints[3] - armorPoints[0];    // pointing right
+
+            double armorHeight = (cv::norm(leftVector) + cv::norm(rightVector)) / 2;
+            double armorWidth = (cv::norm(topVector) + cv::norm(bottomVector)) / 2;
+
+            bool largeArmor;
+            if (inRange(armorWidth / armorHeight, params.small_armor_aspect_ratio())) {
+                largeArmor = false;
+            } else if (inRange(armorWidth / armorHeight, params.large_armor_aspect_ratio())) {
+                largeArmor = true;
+            } else {
+                continue;
+            }
+
+            Point2f center = {0, 0};
+            for (int i = 0; i < 4; i++) {
+                center.x += armorPoints[i].x;
+                center.y += armorPoints[i].y;
+            }
+            // Just use the average X and Y coordinate for the four point
+            center.x /= 4;
+            center.y /= 4;
+
+            float angleDiff = std::abs(cv::fastAtan2(leftVector.y, leftVector.x) - cv::fastAtan2(rightVector.y, rightVector.x));
+
+            acceptedArmors_NG.push_back(DetectedArmor{armorPoints,
+                                                      center,
+                                                      largeArmor,
+                                                      0,
+                                                      {0 ,0},
+                                                      angleDiff,
+                                                      (normalizeLightAngle(cv::fastAtan2(leftVector.y, leftVector.x)) +\
+                                                       normalizeLightAngle(cv::fastAtan2(rightVector.y, rightVector.x))) / 2});
+        }
+    }
+
+
+
+//    return acceptedArmors;
+    return acceptedArmors_NG;
 }
 
 std::vector<ArmorDetector::DetectedArmor>::iterator

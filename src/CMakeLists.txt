@@ -50,7 +50,7 @@ endif ()
 if (OpenCV_FOUND AND CUDAToolkit_FOUND)
     option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
     add_library(libYOLODet SHARED YOLOv5_TensorRT.cpp)
-    target_link_libraries(libYOLODet ${OpenCV_LIBRARIES} nvinfer cudart fmt::fmt)
+    target_link_libraries(libYOLODet ${OpenCV_LIBRARIES} nvinfer cudart fmt::fmt "stdc++fs" nvonnxparser cuda)
 #    target_include_directories(libYOLODet INTERFACE include)
 else()
     message("=> Target libNanoDet is not available to build. Depends: OpenCV")
@@ -114,7 +114,7 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
             libSerial
             libArmorSolver
             libCamera
-#            libYOLODet
+            libYOLODet
             )
     target_compile_definitions(libSolais PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 
