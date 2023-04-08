@@ -9,7 +9,7 @@
 #include <mutex>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#ifdef CUDAToolkit_FOUND
+#ifdef ON_JETSON
 #include <NvInfer.h>
 #include <cuda_runtime_api.h>
 #include "YOLOv5_TensorRT.h"
@@ -20,7 +20,7 @@ namespace meta {
 class ArmorDetector {
 public:
 
-#ifdef CUDAToolkit_FOUND
+#ifdef ON_JETSON
     ArmorDetector() : yoloModel(std::string("/home/nvidia/tmp/tmp.pS4QeSxQaM/nn-models/model-opt-4.onnx")) {
     }
 #endif
@@ -53,7 +53,7 @@ private:
     cv::Mat imgColor;
     std::vector<cv::RotatedRect> lightRects;
     cv::Mat imgLights;
-#ifdef CUDAToolkit_FOUND
+#ifdef ON_JETSON
     YOLODet yoloModel;
 #endif
     static void drawRotatedRect(cv::Mat &img, const cv::RotatedRect &rect, const cv::Scalar &boarderColor);

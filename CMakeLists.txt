@@ -60,6 +60,7 @@ endif ()
 # Find TensorRT and CUDA
 find_package(CUDAToolkit)
 if (CUDAToolkit_FOUND)
+    add_compile_definitions(ON_JETSON)
     enable_language(CUDA)
     include_directories(${CUDAToolkit_INCLUDE_DIRS})
     link_directories(${CUDAToolkit_LIBRARY_DIR})

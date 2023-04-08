@@ -342,7 +342,7 @@ std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect(const Mat &img) 
 
     return acceptedArmors;
 }
-#ifdef CUDAToolkit_FOUND
+#ifdef ON_JETSON
 std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect_NG(const cv::Mat &img) {
     // ================================ Setup ================================
     {
