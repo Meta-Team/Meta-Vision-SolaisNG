@@ -95,7 +95,7 @@ endif()
 #endif ()
 
 # libSolais
-if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND TARGET libTerminalSocket AND TARGET libArmorSolver AND TARGET libSerial AND TARGET libYOLODet)
+if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND TARGET libTerminalSocket AND TARGET libArmorSolver AND TARGET libSerial)
     add_library(libSolais
             ArmorDetector.cpp
             AimingSolver.cpp
@@ -103,6 +103,11 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
             ImageSet.cpp
             VideoSet.cpp
             Executor.cpp)
+    if(TARGET libYOLODet)
+        list(INSERT SolaisNNLibs 0 
+            libYOLODet
+        )
+    endif()
     target_link_libraries(libSolais
             ${OpenCV_LIBRARIES}
             ${Boost_FILESYSTEM_LIBRARY}
@@ -114,7 +119,7 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
             libSerial
             libArmorSolver
             libCamera
-            libYOLODet
+            ${SolaisNNLibs}
             )
     target_compile_definitions(libSolais PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 

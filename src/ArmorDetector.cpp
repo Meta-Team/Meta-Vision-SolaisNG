@@ -342,7 +342,7 @@ std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect(const Mat &img) 
 
     return acceptedArmors;
 }
-
+#ifdef CUDAToolkit_FOUND
 std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect_NG(const cv::Mat &img) {
     // ================================ Setup ================================
     {
@@ -722,7 +722,7 @@ std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect_NG(const cv::Mat
 //    return acceptedArmors;
     return acceptedArmors_NG;
 }
-
+#endif
 std::vector<ArmorDetector::DetectedArmor>::iterator
 ArmorDetector::filterAcceptedArmorsToRemove(std::vector<DetectedArmor> &acceptedArmors) const {
     for (auto it = acceptedArmors.begin(); it != acceptedArmors.end(); ++it) {

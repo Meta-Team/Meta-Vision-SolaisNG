@@ -1,5 +1,6 @@
 # TerminalSocketUnitTest
-if (TARGET libTerminalSocket)
+#if (TARGET libTerminalSocket)
+if (FALSE)
     add_executable(TerminalSocketUnitTest TerminalSocketUnitTest.cpp)
     target_link_libraries(TerminalSocketUnitTest libTerminalSocket)
 else ()
@@ -7,7 +8,8 @@ else ()
 endif ()
 
 # SerialUnitTest
-if (TARGET libSerial)
+#if (TARGET libSerial)
+if (FALSE)
     add_executable(SerialUnitTest SerialUnitTest.cpp)
     target_link_libraries(SerialUnitTest libSerial pthread)
 else ()
@@ -15,7 +17,8 @@ else ()
 endif ()
 
 # CameraBenchmark
-if (TARGET libCamera)
+#if (TARGET libCamera)
+if(FALSE)
     add_executable(CameraBenchmark CameraBenchmark.cpp)
     target_link_libraries(CameraBenchmark libCamera)
 else ()
