@@ -9,18 +9,21 @@
 #include <mutex>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#ifdef CUDAToolkit_FOUND
 #include <NvInfer.h>
 #include <cuda_runtime_api.h>
 #include "YOLOv5_TensorRT.h"
+#endif
 
 namespace meta {
 
 class ArmorDetector {
 public:
 
+#ifdef CUDAToolkit_FOUND
     ArmorDetector() : yoloModel(std::string("/home/nvidia/tmp/tmp.pS4QeSxQaM/nn-models/model-opt-4.onnx")) {
-
     }
+#endif
     void setParams(const ParamSet &p) { params = p; }
 
     const ParamSet &getParams() const { return params; }
@@ -50,8 +53,9 @@ private:
     cv::Mat imgColor;
     std::vector<cv::RotatedRect> lightRects;
     cv::Mat imgLights;
+#ifdef CUDAToolkit_FOUND
     YOLODet yoloModel;
-
+#endif
     static void drawRotatedRect(cv::Mat &img, const cv::RotatedRect &rect, const cv::Scalar &boarderColor);
 
     /**

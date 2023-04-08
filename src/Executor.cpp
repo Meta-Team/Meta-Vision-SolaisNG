@@ -191,8 +191,12 @@ void Executor::runStreamingDetection(InputSource *source) {
 
 
         // Run armor detection algorithm
-//        std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect(img);
+        // For the compile on no CUDA supported platforms
+#ifdef CUDAToolkit_FOUND
         std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect_NG(img);
+#else
+        std::vector<ArmorDetector::DetectedArmor> detectedArmors = detector_->detect(img);
+#endif
 
         // Solve armor positions
         std::vector<AimingSolver::ArmorInfo> armors;
