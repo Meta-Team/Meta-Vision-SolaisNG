@@ -191,7 +191,16 @@ To let CMake find ProtoBuf installed by Snap, the installation path needs to be 
 -DCMAKE_PREFIX_PATH=/snap/protobuf/current
 ```
 
-# Other CMake Options
+## CMake Options for CUDA
+To let CMake properly configure CUDA, the CUDA architecture and CUDA compiler path
+need to be supplied manually:
+```
+-DCMAKE_CUDA_ARCHITECTURES=<Compute Capability> -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
+```
+Replace `<Compute Capability>` with your desired compute capability. 
+For example, the common choice for Jetson Nano is `53`.
+
+## Other CMake Options
 The following option specify Qt install path (required to let CMake find Qt):
 ```
 -DQt5_DIR="/usr/local/Cellar/qt@5/5.15.2/lib/cmake/Qt5"
