@@ -18,6 +18,7 @@ Also, we Vision group mainly deal with lights in the images :)
 * CUDA >= 10.2 or 11.8
 * cuDNN >= 8.x
 * TensorRT >= 8.2.1 (used for YOLOv5)
+* libfmt
 
 # Setup on Jetson Nano (Ubuntu)
 
@@ -125,17 +126,49 @@ sudo apt install libprotobuf-dev protobuf-compiler
 sudo apt-get install libzbar-dev libzbar0
 ```
 
-## Install CUDA 11.8
+## Install CUDA
 
-To install CUDA 11.8 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html).
+To install CUDA 12.1 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html).
+
+Note: It is advised to use network repo method for WSL installation as it's much 
+simpler than the local repo method. 
+
+```shell
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.0-1_all.deb
+sudo dpkg -i cuda-keyring_1.0-1_all.deb
+sudo apt-get update
+sudo apt-get install cuda
+```
 
 ## Install cuDNN 8.6.0
 
 To install cuDNN 8.6.0 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html).
 
+Note: Network repo method doesn't work for cuDNN on WSL. Use local repo method 
+instead.
+
+Assuming you've downloaded `cudnn-local-repo-ubuntu2204-8.6.0.163_1.0-1_amd64.deb` to the current directory.
+```shell
+sudo dpkg -i cudnn-local-repo-ubuntu2204-8.6.0.163_1.0-1_amd64.deb
+sudo cp /var/cudnn-local-repo-*/cudnn-local-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get install libcudnn8
+```
+
 ## Install TensorRT 8.5.3
 
 To install TensorRT 8.5.3 on Ubuntu 22.04, follow the instructions on [NVIDIA's website](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html).
+
+Note: Network repo method doesn't work for TensorRT on WSL. Use local repo 
+method instead.
+
+Assuming you've downloaded `nv-tensorrt-local-repo-ubuntu2204-8.5.3-cuda-11.8_1.0-1_amd64.deb` to the current directory.
+```shell
+sudo dpkg -i nv-tensorrt-local-repo-ubuntu2204-8.5.3-cuda-11.8_1.0-1_amd64.deb
+sudo cp /var/nv-tensorrt-local-repo-ubuntu2204-8.5.3-cuda-11.8/*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get install tensorrt
+```
 
 ## Install OpenCV 4.7.0
 
