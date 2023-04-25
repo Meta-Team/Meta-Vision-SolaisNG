@@ -25,7 +25,6 @@
 
 
 using namespace nvinfer1;
-//using namespace sample;
 
 static inline size_t get_dims_size(const Dims &dims) {
     size_t sz = 1;
@@ -96,8 +95,10 @@ namespace meta {
         TRT_ASSERT((context = engine->createExecutionContext()) != nullptr);
         TRT_ASSERT((input_idx = engine->getBindingIndex("input")) == 0);
         TRT_ASSERT((output_idx = engine->getBindingIndex("output-topk")) == 1);
-        auto input_dims = engine->getBindingDimensions(input_idx);
-        auto output_dims = engine->getBindingDimensions(output_idx);
+//        auto input_dims = engine->getBindingDimensions(input_idx);
+        auto input_dims = engine->getTensorShape("input");
+//        auto output_dims = engine->getBindingDimensions(output_idx);
+        auto output_dims = engine->getTensorShape("output-topk");
         input_sz = get_dims_size(input_dims);
         output_sz = get_dims_size(output_dims);
         TRT_ASSERT(cudaMalloc(&device_buffer[input_idx], input_sz * sizeof(float)) == 0);
