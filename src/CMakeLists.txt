@@ -13,10 +13,10 @@ else()
 endif ()
 
 # libTerminalSocket
-if (Boost_FOUND)
+if (Boost_FOUND AND spdlog_FOUND)
     add_library(libTerminalSocket TerminalSocket.cpp)
     target_link_libraries(libTerminalSocket PUBLIC
-            ${mingw_winsock} ${mingw_mswsock}  ${Boost_SYSTEM_LIBRARY}
+            ${mingw_winsock} ${mingw_mswsock}  ${Boost_SYSTEM_LIBRARY} spdlog::spdlog
             )
 else()
     message("=> Target libTerminalSocket is not available to build. Depends: Boost")
@@ -47,11 +47,11 @@ else()
     message("=> Target libSerial is not available to build. Depends: Boost")
 endif ()
 
-if (OpenCV_FOUND AND CUDAToolkit_FOUND)
-    add_library(libYOLODet OBJECT YOLOv5_TensorRT.cpp)
-    target_link_libraries(libYOLODet ${OpenCV_LIBRARIES} nvinfer cudart fmt "stdc++fs" nvonnxparser ${CUDA_CUDART} ${CUDA_cuda_driver_LIBRARY})
+if (OpenCV_FOUND AND CUDAToolkit_FOUND AND spdlog_FOUND)
+    add_library(libYOLODet YOLOv5_TensorRT.cpp)
+    target_link_libraries(libYOLODet ${OpenCV_LIBRARIES} nvinfer cudart fmt::fmt nvonnxparser ${CUDA_CUDART} ${CUDA_cuda_driver_LIBRARY} spdlog::spdlog)
 else()
-    message("=> Target libNanoDet is not available to build. Depends: OpenCV")
+    message("=> Target libYOLODet is not available to build. Depends: OpenCV")
 endif()
 
 # libArmorSolver
@@ -139,15 +139,15 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
             PUBLIC "PARAM_SET_ROOT=\"${PARAM_SET_ROOT}\""
             PUBLIC "DATA_SET_ROOT=\"${DATA_SET_ROOT}\"")
 else()
-    message("=> Target libSolais is not available to build. Depends: Boost, OpenCV, Protobuf, libParameters, libTerminalSocket, libSerial, libArmorSolver")
+    message("=> Target libSolais is not available to build. Depends: Boost, OpenCV, Protobuf, fmt, spdlog, libParameters, libTerminalSocket, libSerial, libArmorSolver")
 endif()
 
-# libNanoDet
-if (OpenCV_FOUND AND CUDAToolkit_FOUND)
-    option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
-    add_library(libNanoDet SHARED NanoDet_TensorRT.cu)
-    target_link_libraries(libNanoDet ${OpenCV_LIBRARIES} nvinfer cudart)
-    target_include_directories(libNanoDet INTERFACE include)
-else()
-    message("=> Target libNanoDet is not available to build. Depends: OpenCV")
-endif()
+## libNanoDet
+#if (OpenCV_FOUND AND CUDAToolkit_FOUND)
+#    option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
+#    add_library(libNanoDet SHARED NanoDet_TensorRT.cu)
+#    target_link_libraries(libNanoDet ${OpenCV_LIBRARIES} nvinfer cudart)
+#    target_include_directories(libNanoDet INTERFACE include)
+#else()
+#    message("=> Target libNanoDet is not available to build. Depends: OpenCV")
+#endif()

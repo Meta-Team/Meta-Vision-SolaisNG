@@ -3,6 +3,7 @@
 //
 
 #include "ArmorDetector.h"
+#include <spdlog/spdlog.h>
 
 using namespace cv;
 
@@ -363,7 +364,7 @@ std::vector<ArmorDetector::DetectedArmor> ArmorDetector::detect_NG(const cv::Mat
     std::vector<YOLODet::bbox_t> detectResults = yoloModel(img);
     auto end = std::chrono::high_resolution_clock::now();
     double inferenceTime = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count();
-    std::cout << "Inference time: " << inferenceTime << " ms" << std::endl;
+    spdlog::debug("Inference time: {} ms", inferenceTime);
     std::vector<DetectedArmor> acceptedArmors_NG;
 
     int cnt = 0;

@@ -5,6 +5,7 @@
 #include "ParamSetManager.h"
 #include "Utilities.h"
 #include <iostream>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <iomanip>
 #include <google/protobuf/util/json_util.h>
@@ -16,8 +17,8 @@ namespace meta {
 // PARAM_SET_ROOT defined in CMakeLists.txt
 ParamSetManager::ParamSetManager()
         : paramSetRoot(fs::path(PARAM_SET_ROOT) / "params"), defaultParamSetName(boost::asio::ip::host_name()) {
-    std::cout << "Root"<<paramSetRoot<<std::endl;
-    std::cout << "ParamSetManager: using default ParamSet " << defaultParamSetName << ".json" << std::endl;
+    spdlog::info("ParamSetManager: paramSetRoot = {}", paramSetRoot.string());
+    spdlog::info("ParamSetManager: using default ParamSet {}.json", defaultParamSetName);
 
     if (!fs::exists(paramSetRoot / ".." / "params_backup")) {
         fs::create_directories(paramSetRoot / ".." / "params_backup");
@@ -86,7 +87,7 @@ void ParamSetManager::reloadParamSetList() {
         params.set_tracking_life_time(40);
         params.set_allocated_manual_delta_offset(allocFloatPair(0, 0));
 
-        std::cout << "ParamSetManager: create default ParamSet " << defaultParamSetName << ".json" << std::endl;
+        spdlog::info("ParamSetManager: create default ParamSet {}.json", defaultParamSetName);
         saveParamSetToJson(params, paramSetRoot / (defaultParamSetName + ".json"));
     }
 
@@ -112,7 +113,7 @@ ParamSet ParamSetManager::loadCurrentParamSet() const {
 
     auto status = JsonStringToMessage(content, &p, google::protobuf::util::JsonParseOptions());
     if (!status.ok()) {
-        std::cerr << "Failed to load " << filename << ": " << status.message() << std::endl;
+        spdlog::error("Failed to load {} : {}", filename.string(), status.message().as_string());
         return ParamSet();
     } else {
         return p;

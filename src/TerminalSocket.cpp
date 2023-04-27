@@ -5,6 +5,7 @@
 #include "TerminalSocket.h"
 #include <iostream>
 #include <utility>
+#include <spdlog/spdlog.h>
 
 using boost::asio::ip::tcp;
 
@@ -151,7 +152,7 @@ void TerminalSocketBase::handleSend(std::shared_ptr<std::vector<uint8_t>> buf, c
         socketDisconnected = true;
 
     } else if (error) {
-        std::cerr << "TerminalSocketBase: send error: " << error.message() << "\n";
+        spdlog::error("TerminalSocketBase: send error: {}", error.message());
     } else {
         assert(buf->size() == numBytes && "Unexpected # of bytes sent");
     }
@@ -196,7 +197,7 @@ void TerminalSocketBase::handleRecv(const boost::system::error_code &error, size
 
     } else if (error) {
 
-        std::cerr << "TerminalSocketBase: recv error: " << error.message() << "\n";
+        spdlog::error("TerminalSocketBase: recv error: {}", error.message());
         // Continue to process data and start next async_recv
     }
 
@@ -231,7 +232,7 @@ void TerminalSocketBase::handleRecv(const boost::system::error_code &error, size
                     recvState = RECV_NAME;  // transfer to receiving name
                     recvNameStart = i + 1;
                 } else {
-                    std::cerr << "Received invalid package type " << (int) recvBuf[i] << "\n";
+                    spdlog::error("Received invalid package type {}", (int) recvBuf[i]);
                     recvState = RECV_PREAMBLE;
                 }
                 break;
@@ -276,7 +277,7 @@ void TerminalSocketBase::handleRecv(const boost::system::error_code &error, size
 
 
     if (recvOffset + RECV_BUFFER_SIZE > recvBuf.size()) {
-        std::cerr << "Warning: TerminalSocketBase enlarges its receiver buffer to 2x" << std::endl;
+        spdlog::warn("TerminalSocketBase: TerminalSocketBase enlarges its receiver buffer to 2x");
         recvBuf.resize(recvBuf.size() * 2);  // enlarge the buffer to 2x
     }
 
@@ -367,18 +368,17 @@ void TerminalSocketServer::startAccept() {
                           [this, socket](const auto &error) { handleAccept(socket, error); });
 
 
-    std::cout << "TerminalSocketServer: listen on " << port << std::endl;
+    spdlog::info("TerminalSocketServer: listen on {}", port);
 }
 
 void TerminalSocketServer::handleAccept(std::shared_ptr<tcp::socket> socket, const boost::system::error_code &error) {
     if (!error) {
-        std::cout << "TerminalSocketServer: get connection from " << socket->remote_endpoint().address().to_string()
-                  << "\n";
+        spdlog::info("TerminalSocketServer: get connection from {}", socket->remote_endpoint().address().to_string());
         setupSocket(std::move(socket), disconnectionCallback);
     } else if (error == boost::asio::error::operation_aborted) {
         // Ignore
     } else {
-        std::cerr << "TerminalSocketServer: accept error " << error.message() << "\n";
+        spdlog::error("TerminalSocketServer: accept error {}", error.message());
     }
 }
 
@@ -401,11 +401,10 @@ bool TerminalSocketClient::connect(const std::string &server, const std::string 
 
     if (!err) {
         setupSocket(socket, disconnectionCallback);
-        std::cout << "TerminalSocketClient: connected to " << server << ":" << port << std::endl;
+        spdlog::info("TerminalSocketClient: connected to {}:{}", server, port);
         return true;
     } else {
-        std::cerr << "TerminalSocketClient: connection to " << server << ":" << port
-                  << " failed :" << err.message() << std::endl;
+        spdlog::error("TerminalSocketClient: connection to {}:{} failed :{}", server, port, err.message());
         return false;
     }
 }
