@@ -21,7 +21,7 @@ class ArmorDetector {
 public:
 
 #ifdef ON_JETSON
-    ArmorDetector() : yoloModel(std::string("/home/robomaster/Meta-Vision-SolaisNG/nn-models/model-opt-4.onnx")) {
+    ArmorDetector() : yoloModel(std::string(NN_MODEL_ROOT) + std::string("/model-opt-4.onnx")) {
     }
 #endif
     void setParams(const ParamSet &p) { params = p; }
