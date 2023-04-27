@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include <iostream>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <spdlog/spdlog.h>
 
 namespace meta {
 
@@ -45,7 +46,7 @@ void OpenCVCamera::readFrameFromCamera(const package::ParamSet &params) {
     #endif
     if (!cap.isOpened()) {
         capInfoSS << "Failed to open camera " << params.camera_id() << "\n";
-        std::cerr << capInfoSS.rdbuf();
+        spdlog::error(capInfoSS.str());
         return;
     }
 
@@ -82,14 +83,14 @@ void OpenCVCamera::readFrameFromCamera(const package::ParamSet &params) {
     cap.read(buffer[0]);
     if (buffer->empty()) {
         capInfoSS << "Failed to fetch test image from camera " << params.camera_id() << "\n";
-        std::cerr << capInfoSS.rdbuf();
+        spdlog::error(capInfoSS.str());
         return;
     }
     if (buffer[0].cols != params.image_width() || buffer[0].rows != params.image_height()) {
         capInfoSS << "Invalid frame size. "
                   << "Expected: " << params.image_width() << "x" << params.image_height() << ", "
                   << "Actual: " << buffer[0].cols << "x" << buffer[0].rows << "\n";
-        std::cerr << capInfoSS.rdbuf();
+        spdlog::error(capInfoSS.str());
         return;
     }
 
@@ -100,7 +101,7 @@ void OpenCVCamera::readFrameFromCamera(const package::ParamSet &params) {
               << "Gamma: " << cap.get(cv::CAP_PROP_GAMMA) << "\n"
               << "Auto Exposure: " << cap.get(cv::CAP_PROP_AUTO_EXPOSURE) << "\n"
               << "Exposure: " << cap.get(cv::CAP_PROP_EXPOSURE) << "\n";
-    std::cout << capInfoSS.rdbuf();
+    spdlog::info(capInfoSS.str());
 
     while (true) {
 
@@ -140,7 +141,7 @@ void OpenCVCamera::readFrameFromCamera(const package::ParamSet &params) {
     }
 
     cap.release();
-    std::cout << "OpenCVCamera: closed\n";
+    spdlog::info("OpenCVCamera: closed");
 }
 
 void OpenCVCamera::close() {
