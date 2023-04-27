@@ -11,48 +11,38 @@ no one could escape its blows.
 Also, we Vision group mainly deal with lights in the images :)
 
 # TOC
+<!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
+
 - [Dependencies](#dependencies)
-- [Setup on Jetson Orin Nano (Ubuntu)](#setup-on-jetson-orin-nano--ubuntu-)
+- [Setup on Jetson Orin Nano (Ubuntu 20.04)](#setup-on-jetson-orin-nano-ubuntu-2004)
 - [Setup on macOS](#setup-on-macos)
-- [Setup on WSL (Ubuntu 22.04)](#setup-on-wsl--ubuntu-2204-)
-  * [Install CMake](#install-cmake)
-  * [Install Boost](#install-boost)
-  * [Install Protocol Buffer](#install-protocol-buffer)
-  * [Install ZBar](#install-zbar)
-  * [Install CUDA](#install-cuda)
-  * [Install cuDNN 8.6.0](#install-cudnn-860)
-  * [Install TensorRT 8.5.3](#install-tensorrt-853)
-  * [Install OpenCV 4.7.0](#install-opencv-470)
+- [Setup on WSL (Ubuntu 22.04)](#setup-on-wsl-ubuntu-2204)
 - [CMake Build System](#cmake-build-system)
-  * [CMake Options for Jetson Nano (Ubuntu)](#cmake-options-for-jetson-nano--ubuntu-)
+  * [CMake Options for Jetson Nano (Ubuntu)](#cmake-options-for-jetson-nano-ubuntu)
   * [CMake Options for CUDA](#cmake-options-for-cuda)
   * [Other CMake Options](#other-cmake-options)
-- [[Deprecated] Setup on Jetson Nano (Ubuntu 18.04)](#-deprecated-support--setup-on-jetson-nano--ubuntu-1804-)
-  * [Install or Upgrade CMake](#install-or-upgrade-cmake)
-  * [Install Boost](#install-boost-1)
-  * [Install Protocol Buffer](#install-protocol-buffer-1)
-  * [Install ZBar](#install-zbar-1)
-- [Design Idea: Core-Terminal Co-Design from the Start](#design-idea--core-terminal-co-design-from-the-start)
+- [Design Idea: Core-Terminal Co-Design from the Start](#design-idea-core-terminal-co-design-from-the-start)
+- [[Deprecated] Setup on Jetson Nano (Ubuntu 18.04)](#deprecated-setup-on-jetson-nano-ubuntu-1804)
+
+<!-- TOC end -->
 
 # Dependencies
-* CMake >= 3.10
+* CMake >= 3.22
 * OpenCV 4
-* Boost
+* Boost >= 1.71
 * ZBar (for ArmorSolverUnitTest)
-* CUDA >= 12.0 or 11.8
+* CUDA >= 12.0 or 11.4
 * cuDNN >= 8.x
-* TensorRT >= 8.2.1 (used for YOLOv5)
+* TensorRT >= 8.5.2 (used for YOLOv5)
 * libfmt
 
-# Setup on Jetson Orin Nano (Ubuntu)
+# Setup on Jetson Orin Nano (Ubuntu 20.04)
+
+Please refer to this [page](https://github.com/Meta-Team/Meta-Vision-SolaisNG/wiki/Setup-on-Jetson-Orin-Nano-(Ubuntu-20.04)) for further information.
 
 # Setup on macOS
 
-```shell
-brew install cmake opencv boost zbar protobuf
-```
-
-Note: Since no one from our team uses macOS currently, we're unable to provide detailed instructions on how to install
+**Note**: Since no one from our team uses macOS currently, we're unable to provide detailed instructions on how to install
 CUDA, cuDNN and TensorRT on macOS. To our knowledge, it's **no longer possible** to install CUDA on macOS since CUDA 10.2.
 
 # Setup on WSL (Ubuntu 22.04)
@@ -106,6 +96,31 @@ To disable Serial (for example, to test Solais locally):
 ```
 -DSERIAL_DEVICE=""
 ```
+
+# Design Idea: Core-Terminal Co-Design from the Start
+
+One of the difficulties of Vision is tuning and testing. Hard-coded parameters are unacceptable, as every change
+requires a re-compile. 
+
+On the other hand, results of each processing step need to be visualized. With the typical 
+approach used by most teams: OpenCV's imshow, images can only be shown on Jetson's desktop and therefore a screen is still
+required.
+
+Therefore, from the start of this project, a Terminal for tuning and testing is co-designed with the Core:
+* Protocol Buffer is used for parameters and results.
+* Core communicates with Terminal completely through TCP with the customized protocol ([TerminalSocket.h](include/TerminalSocket.h))
+* Terminal UI are automatically generated from .proto file at compile time (with [GeneratePhaseUI.py](tools/SolaisTerminal/GeneratePhaseUI.py)).
+Every time to add a parameter, all we need is:
+  * Change [Parameters.proto](src/Parameters.proto)
+  * Add a default value in [ParamSetManager.cpp](src/ParamSetManager.cpp)
+  * Add a default value in each existing json file of parameters (otherwise the error of missing fields will arise)
+  * Use the parameter in the code
+  * There is nothing to do with Terminal UI file.
+* Terminal-related code should have zero overhead in Core when the Terminal is not attached.
+  * Core never sends results actively. Result images, frame rates, parameters and other data are fetched by Terminal.
+
+[doc/message-table.md](doc/message-table.md) describes the list of messages exchanged between the Core and the Terminal.
+Make sure to update it whenever a new message is added.
 
 # [Deprecated] Setup on Jetson Nano (Ubuntu 18.04)
 
@@ -164,28 +179,3 @@ sudo snap install protobuf --classic
 ```shell
 sudo apt-get install libzbar-dev libzbar0
 ```
-
-# Design Idea: Core-Terminal Co-Design from the Start
-
-One of the difficulties of Vision is tuning and testing. Hard-coded parameters are unacceptable, as every change
-requires a re-compile. 
-
-On the other hand, results of each processing step need to be visualized. With the typical 
-approach used by most teams: OpenCV's imshow, images can only be shown on Jetson's desktop and therefore a screen is still
-required.
-
-Therefore, from the start of this project, a Terminal for tuning and testing is co-designed with the Core:
-* Protocol Buffer is used for parameters and results.
-* Core communicates with Terminal completely through TCP with the customized protocol ([TerminalSocket.h](include/TerminalSocket.h))
-* Terminal UI are automatically generated from .proto file at compile time (with [GeneratePhaseUI.py](tools/SolaisTerminal/GeneratePhaseUI.py)).
-Every time to add a parameter, all we need is:
-  * Change [Parameters.proto](src/Parameters.proto)
-  * Add a default value in [ParamSetManager.cpp](src/ParamSetManager.cpp)
-  * Add a default value in each existing json file of parameters (otherwise the error of missing fields will arise)
-  * Use the parameter in the code
-  * There is nothing to do with Terminal UI file.
-* Terminal-related code should have zero overhead in Core when the Terminal is not attached.
-  * Core never sends results actively. Result images, frame rates, parameters and other data are fetched by Terminal.
-
-[doc/message-table.md](doc/message-table.md) describes the list of messages exchanged between the Core and the Terminal.
-Make sure to update it whenever a new message is added.
