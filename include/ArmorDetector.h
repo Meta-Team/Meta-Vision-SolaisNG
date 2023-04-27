@@ -21,7 +21,7 @@ class ArmorDetector {
 public:
 
 #ifdef ON_JETSON
-    ArmorDetector() : yoloModel(std::string("/home/nvidia/tmp/tmp.pS4QeSxQaM/nn-models/model-opt-4.onnx")) {
+    ArmorDetector() : yoloModel(std::string("/home/robomaster/Meta-Vision-SolaisNG/nn-models/model-opt-4.onnx")) {
     }
 #endif
     void setParams(const ParamSet &p) { params = p; }
@@ -38,7 +38,7 @@ public:
         float avgLightAngle;
     };
 
-    std::vector<DetectedArmor> detect(const cv::Mat &img);
+    [[deprecated]] std::vector<DetectedArmor> detect(const cv::Mat &img);
     std::vector<DetectedArmor> detect_NG(const cv::Mat &img);
 
     static float normalizeLightAngle(float angle) { return angle <= 90 ? angle : 180 - angle; }

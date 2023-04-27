@@ -41,6 +41,7 @@ void OpenCVCamera::readFrameFromCamera(const package::ParamSet &params) {
     cap.open(params.camera_id(), cv::CAP_ANY);
     #else
     cap.open(params.camera_id(), cv::CAP_V4L2);
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G')); // Unsure whether this affects other camera devices.
     #endif
     if (!cap.isOpened()) {
         capInfoSS << "Failed to open camera " << params.camera_id() << "\n";
