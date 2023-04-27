@@ -12,6 +12,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/core/cuda.hpp>
+#include <spdlog/spdlog.h>
+#include <fmt/format.h>
+#include <fmt/color.h>
 
 using namespace meta;
 using namespace package;
@@ -23,7 +26,7 @@ std::thread *tcpIOThread = nullptr;
 
 // Setup a server with automatic acceptance
 TerminalSocketServer socketServer(tcpIOContext, 8800, [](auto s) {
-    std::cout << "TerminalSocketServer: disconnected" << std::endl;
+    spdlog::info("TerminalSocketServer: disconnected");
     s->startAccept();
 });
 
@@ -183,7 +186,7 @@ void handleRecvSingleString(std::string_view name, std::string_view s) {
 
     return;
     INVALID_COMMAND:
-    std::cerr << "Invalid single-string package <" << name << "> \"" << s << "\"" << std::endl;
+    spdlog::error("Invalid single-string package <{}> \"{}\"", name, s);
 }
 
 void handleRecvBytes(std::string_view name, const uint8_t *buf, size_t size) {
@@ -254,7 +257,7 @@ void handleRecvBytes(std::string_view name, const uint8_t *buf, size_t size) {
         sendStatusBarMsg("stop recording video");
 
     } else {
-        std::cerr << "Unknown bytes package <" << name << ">" << std::endl;
+        spdlog::error("Unknown bytes package <{}>", name);
     }
 }
 
@@ -276,8 +279,10 @@ std::unique_ptr<Serial> serial;
 
 int main(int argc, char *argv[]) {
 
-    std::cout << "CUDA device count: " << cv::cuda::getCudaEnabledDeviceCount() << std::endl;
-    std::cout << cv::getBuildInformation() << std::endl;
+
+
+    fmt::print(fmt::bg(fmt::color::royal_blue) ,"Welcome to {}!\n\n", PROJECT_NAME);
+//    fmt::print(cv::getBuildInformation());
 
     CameraSdkInit(0);   // for MVCamera
 
@@ -292,7 +297,7 @@ int main(int argc, char *argv[]) {
     if (strlen(SERIAL_DEVICE) != 0) {
         serial = std::make_unique<Serial>(serialIOContext);
     } else {
-        std::cerr << "Serial disabled for debug purpose" << std::endl;
+        spdlog::warn("Solais: Serial connection disabled for debug purposes");
     }
     executor = std::make_unique<Executor>(openCVCamera.get(), mvCamera.get(), imageSet.get(), videoSet.get(),
                                           paramSetManager.get(),

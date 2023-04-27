@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.10)
-project(Meta_Vision_Solais)
+cmake_minimum_required(VERSION 3.22)
+project(Meta_Vision_SolaisNG)
+
+add_compile_definitions(PROJECT_NAME="${PROJECT_NAME}")
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -121,6 +123,14 @@ if (fmt_FOUND)
 else()
     message(WARNING "fmt not found so some targets may not be available")
 endif ()
+
+find_package(spdlog)
+if (spdlog_FOUND)
+    add_compile_definitions(SPDLOG_FMT_EXTERNAL) # Force spdlog to use external fmt
+    message("spdlog found")
+else()
+    message(WARNING "spdlog not found so some targets may not be available")
+endif()
 
 # Shared include directory
 include_directories(include)

@@ -4,21 +4,19 @@
 
 #include "YOLOv5_TensorRT.h"
 #include <fstream>
-#include <experimental/filesystem>
-//#include <logger.h>
+#include <boost/filesystem.hpp>
 #include <TrtLogger.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <NvInfer.h>
 #include <NvOnnxParser.h>
-#include <fmt/format.h>
-#include <fmt/color.h>
 #include <opencv2/imgproc.hpp>
+#include "spdlog/spdlog.h"
 
 #define TRT_ASSERT(expr)                                                      \
     do{                                                                       \
         if(!(expr)) {                                                         \
-            fmt::print(fmt::fg(fmt::color::red), "assert fail: '" #expr "'"); \
+            spdlog::error("assert fail: '" #expr "'");                        \
             exit(-1);                                                         \
         }                                                                     \
     } while(0)
@@ -82,11 +80,14 @@ constexpr float sigmoid(float x) {
 
 
 namespace meta {
+
+    namespace fs = boost::filesystem;
+
     YOLODet::YOLODet(const std::string &onnx_file) {
-        std::experimental::filesystem::path onnx_file_path(onnx_file);
+        fs::path onnx_file_path(onnx_file);
         auto cache_file_path = onnx_file_path;
-        cache_file_path.replace_extension("cache");
-        if (std::experimental::filesystem::exists(cache_file_path)) {
+        cache_file_path.replace_extension("engine");
+        if (fs::exists(cache_file_path)) {
             build_engine_from_cache(cache_file_path.c_str());
         } else {
             build_engine_from_onnx(onnx_file_path.c_str());
@@ -117,7 +118,7 @@ namespace meta {
     }
 
     void YOLODet::build_engine_from_onnx(const std::string &onnx_file) {
-        std::cout << "[INFO]: build engine from onnx" << std::endl;
+        spdlog::info("YOLOv5: Building engine from ONNX file: {}", onnx_file);
         auto builder = createInferBuilder(gLogger);
         TRT_ASSERT(builder != nullptr);
         const auto explicitBatch = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
@@ -143,15 +144,15 @@ namespace meta {
         network->unmarkOutput(*yolov5_output);
         auto config = builder->createBuilderConfig();
         if (builder->platformHasFastFp16()) {
-            std::cout << "[INFO]: platform support fp16, enable fp16" << std::endl;
+            spdlog::info("YOLOv5: Current Platform supports FP16, FP16 enabled");
             config->setFlag(BuilderFlag::kFP16);
         } else {
-            std::cout << "[INFO]: platform do not support fp16, enable fp32" << std::endl;
+            spdlog::info("YOLOv5: Current Platform doesn't support FP16, FP32 enabled");
         }
         size_t free, total;
         cuMemGetInfo(&free, &total);
-        std::cout << "[INFO]: total gpu mem: " << (total >> 20) << "MB, free gpu mem: " << (free >> 20) << "MB" << std::endl;
-        std::cout << "[INFO]: max workspace size will use all of free gpu mem" << std::endl;
+        spdlog::info("YOLOv5: Total GPU memory: {}MB, free GPU memory: {}MB", total >> 20, free >> 20);
+        spdlog::info("YOLOv5: Max workspace size: {}MB", free >> 20);
         config->setMaxWorkspaceSize(free);
         TRT_ASSERT((engine = builder->buildEngineWithConfig(*network, *config)) != nullptr);
         delete config;
@@ -161,7 +162,7 @@ namespace meta {
     }
 
     void YOLODet::build_engine_from_cache(const std::string &cache_file) {
-        std::cout << "[INFO]: build engine from cache" << std::endl;
+        spdlog::info("YOLOv5: Building engine from .engine file {}", cache_file);
         std::ifstream ifs(cache_file, std::ios::binary);
         ifs.seekg(0, std::ios::end);
         size_t sz = ifs.tellg();

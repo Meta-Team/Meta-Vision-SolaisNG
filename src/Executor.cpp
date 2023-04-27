@@ -4,7 +4,7 @@
 
 #include "Executor.h"
 #include "Utilities.h"
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 namespace meta {
 
@@ -48,10 +48,10 @@ void Executor::applyParams(const ParamSet &p) {
         if (cameraOpened) camera_->close();
         if (p.camera_backend() == ParamSet::MV_CAMERA) {
             camera_ = mvCamera_;
-            std::cout << "Executor: use MVCamera" << std::endl;
+            spdlog::info("Executor: Using MVCamera as camera");
         } else {
             camera_ = openCvCamera_;
-            std::cout << "Executor: use OpenCVCamera" << std::endl;
+            spdlog::info("Executor: Using OpenCVCamera as camera");
         }
         if (cameraOpened) camera_->open(p);
     }
@@ -80,7 +80,7 @@ void Executor::applyParams(const ParamSet &p) {
 
         cv::FileStorage fs(filename, cv::FileStorage::READ);
         if (!fs.isOpened()) {
-            std::cerr << "Failed to open " << filename << std::endl;
+            spdlog::error("Failed to open {}", filename);
             std::exit(1);
         }
 
@@ -165,8 +165,7 @@ bool Executor::startVideoDetection(const std::string &videoName) {
 }
 
 void Executor::runStreamingDetection(InputSource *source) {
-    std::cout << "Executor: start streaming\n";
-
+    spdlog::info("Executor: start streaming");
     currentInput_ = source;
     currentInput_->fetchAndClearFrameCounter();
     aimingSolver_->resetHistory();
@@ -260,7 +259,7 @@ void Executor::runStreamingDetection(InputSource *source) {
         cumulativeFrameCounter++;
     }
 
-    std::cout << "Executor: stopped\n";
+    spdlog::info("Executor: stopped");
 
     source->close();
     currentInput_ = nullptr;
