@@ -4,7 +4,7 @@
 
 #include "YOLOv5_TensorRT.h"
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <TrtLogger.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -81,7 +81,7 @@ constexpr float sigmoid(float x) {
 
 namespace meta {
 
-    namespace fs = boost::filesystem;
+    namespace fs = std::filesystem;
 
     YOLODet::YOLODet(const std::string &onnx_file) {
         fs::path onnx_file_path(onnx_file);
