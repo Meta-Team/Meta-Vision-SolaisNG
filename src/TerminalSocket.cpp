@@ -190,6 +190,7 @@ void TerminalSocketBase::handleRecv(const boost::system::error_code &error, size
         error == boost::asio::error::operation_aborted || error == boost::asio::error::broken_pipe) {
 
         if (disconnectCallback) disconnectCallback(reinterpret_cast<T *>(this));
+        spdlog::info("TerminalSocketBase: Disconnected.");
 
         socketDisconnected = true;
 
@@ -360,6 +361,8 @@ TerminalSocketServer::TerminalSocketServer(boost::asio::io_context &ioContext, i
 
 void TerminalSocketServer::startAccept() {
 
+    spdlog::info("TerminalSocketServer: Listening on {}", port);
+
     auto socket = std::make_shared<tcp::socket>(ioContext);
     // shared_ptr is used to manage socket. If the raw pointer is used and it doesn't reach handleAccept, memory leaks.
 
@@ -367,14 +370,13 @@ void TerminalSocketServer::startAccept() {
     acceptor.async_accept(*socket,
                           [this, socket](const auto &error) { handleAccept(socket, error); });
 
-
-    spdlog::info("TerminalSocketServer: listen on {}", port);
 }
 
 void TerminalSocketServer::handleAccept(std::shared_ptr<tcp::socket> socket, const boost::system::error_code &error) {
     if (!error) {
-        spdlog::info("TerminalSocketServer: get connection from {}", socket->remote_endpoint().address().to_string());
+        spdlog::info("TerminalSocketServer: Got connection from {}", socket->remote_endpoint().address().to_string());
         setupSocket(std::move(socket), disconnectionCallback);
+        startAccept(); // Waiting for next connection
     } else if (error == boost::asio::error::operation_aborted) {
         // Ignore
     } else {
@@ -412,6 +414,9 @@ bool TerminalSocketClient::connect(const std::string &server, const std::string 
 void TerminalSocketClient::disconnect() {
     if (connected()) {
         closeSocket();
+    }
+    if (disconnectionCallback) {
+        disconnectionCallback(this);
     }
 }
 
