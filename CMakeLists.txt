@@ -5,6 +5,28 @@ add_compile_definitions(PROJECT_NAME="${PROJECT_NAME}")
 
 set(CMAKE_CXX_STANDARD 17)
 
+include(cmake/CPM.cmake)
+
+#CPMAddPackage(
+#        NAME stdexec
+#        GITHUB_REPOSITORY NVIDIA/stdexec
+#        GIT_TAG main # This will always pull the latest code from the `main` branch. You may also use a specific release version or tag
+#)
+
+CPMAddPackage(
+        NAME fmt
+        GIT_TAG 9.1.0
+        GITHUB_REPOSITORY fmtlib/fmt
+)
+
+CPMAddPackage(
+        NAME spdlog
+        GITHUB_REPOSITORY gabime/spdlog
+        GIT_TAG v1.11.0
+        OPTIONS
+            "SPDLOG_FMT_EXTERNAL ON"
+)
+
 # Find Boost
 find_package(Boost COMPONENTS system filesystem)
 if (Boost_FOUND)
@@ -98,6 +120,7 @@ if (PkgConfig_FOUND)
         unset(GSTREAMER_FOUND)
     endif ()
 endif ()
+
 if(MINGW)
     find_library(
             mingw_winsock
@@ -109,27 +132,6 @@ if(MINGW)
     )
 
     MESSAGE("winsock_fix:\n ${mingw_winsock} and ${mingw_mswsock}\n")
-endif()
-
-#FIND_PACKAGE(OpenMP)
-#if (OPENMP_FOUND)
-#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-#endif ()
-
-find_package(fmt)
-if (fmt_FOUND)
-    message("fmt found")
-else()
-    message(WARNING "fmt not found so some targets may not be available")
-endif ()
-
-find_package(spdlog)
-if (spdlog_FOUND)
-    add_compile_definitions(SPDLOG_FMT_EXTERNAL) # Force spdlog to use external fmt
-    message("spdlog found")
-else()
-    message(WARNING "spdlog not found so some targets may not be available")
 endif()
 
 # Shared include directory

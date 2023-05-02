@@ -13,7 +13,7 @@ else()
 endif ()
 
 # libTerminalSocket
-if (Boost_FOUND AND spdlog_FOUND)
+if (Boost_FOUND AND TARGET spdlog::spdlog)
     add_library(libTerminalSocket TerminalSocket.cpp)
     target_link_libraries(libTerminalSocket PUBLIC
             ${mingw_winsock} ${mingw_mswsock}  ${Boost_SYSTEM_LIBRARY} spdlog::spdlog
@@ -47,7 +47,7 @@ else()
     message("=> Target libSerial is not available to build. Depends: Boost")
 endif ()
 
-if (OpenCV_FOUND AND CUDAToolkit_FOUND AND spdlog_FOUND)
+if (OpenCV_FOUND AND CUDAToolkit_FOUND AND TARGET spdlog::spdlog)
     add_library(libYOLODet YOLOv5_TensorRT.cpp)
     target_link_libraries(libYOLODet ${OpenCV_LIBRARIES} nvinfer cudart fmt::fmt nvonnxparser ${CUDA_CUDART} ${CUDA_cuda_driver_LIBRARY} spdlog::spdlog)
 
@@ -74,7 +74,7 @@ endif()
 # libCamera
 if (OpenCV_FOUND AND TARGET libParameters)
     add_library(libCamera Camera.cpp OpenCVCamera.cpp MVCamera.cpp)
-    target_link_libraries(libCamera ${OpenCV_LIBRARIES} libParameters MVSDK)
+    target_link_libraries(libCamera ${OpenCV_LIBRARIES} libParameters MVSDK spdlog::spdlog)
     if (GSTREAMER_FOUND)
         target_compile_definitions(libParameters PUBLIC "GSTREAMER_FOUND=1")
         message("GStreamer found")
@@ -148,7 +148,7 @@ if (Boost_FOUND AND OpenCV_FOUND AND Protobuf_FOUND AND TARGET libParameters AND
             PUBLIC "PARAM_SET_ROOT=\"${PARAM_SET_ROOT}\""
             PUBLIC "DATA_SET_ROOT=\"${DATA_SET_ROOT}\"")
 else()
-    message("=> Target libSolais is not available to build. Depends: Boost, OpenCV, Protobuf, fmt, spdlog, libParameters, libTerminalSocket, libSerial, libArmorSolver")
+    message("=> Target libSolais is not available to build. Depends: Boost, OpenCV, Protobuf, fmt::fmt, spdlog, libParameters, libTerminalSocket, libSerial, libArmorSolver")
 endif()
 
 ## libNanoDet

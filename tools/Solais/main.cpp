@@ -25,10 +25,7 @@ boost::asio::io_context tcpIOContext;
 std::thread *tcpIOThread = nullptr;
 
 // Setup a server with automatic acceptance
-TerminalSocketServer socketServer(tcpIOContext, 8800, [](auto s) {
-    spdlog::info("TerminalSocketServer: disconnected");
-    s->startAccept();
-});
+TerminalSocketServer socketServer(tcpIOContext, 8800);
 
 
 /** TCP Handling **/
@@ -278,8 +275,6 @@ std::unique_ptr<AimingSolver> aimingSolver;
 std::unique_ptr<Serial> serial;
 
 int main(int argc, char *argv[]) {
-
-
 
     fmt::print(fmt::bg(fmt::color::royal_blue) ,"Welcome to {}!\n\n", PROJECT_NAME);
 //    fmt::print(cv::getBuildInformation());
