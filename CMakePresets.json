@@ -1,0 +1,18 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default Config",
+      "description": "Build using Ninja generator",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/default",
+      "cacheVariables": {
+        "CMAKE_CUDA_ARCHITECTURES": "87",
+        "CMAKE_CUDA_COMPILER": "/usr/local/cuda/bin/nvcc",
+        "SERIAL_DEVICE": "",
+        "CMAKE_PREFIX_PATH": "/snap/protobuf/current"
+      }
+    }
+  ]
+}
