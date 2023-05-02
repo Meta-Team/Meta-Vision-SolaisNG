@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.25)
 project(
     Meta_Vision_SolaisNG
     VERSION 1.0
-    LANGUAGES CXX CUDA
+    LANGUAGES CXX
 )
 
 # ---- Include guards ----
@@ -102,7 +102,7 @@ endif()
 find_package(CUDAToolkit)
 if(CUDAToolkit_FOUND)
     add_compile_definitions(ON_JETSON)
-    # enable_language(CUDA)
+    enable_language(CUDA)
     include_directories(${CUDAToolkit_INCLUDE_DIRS})
     link_directories(${CUDAToolkit_LIBRARY_DIR})
 else()
