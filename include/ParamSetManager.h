@@ -6,11 +6,11 @@
 #define META_VISION_SOLAIS_PARAMSETMANAGER_H
 
 #include "Parameters.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace meta {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 class ParamSetManager {
 public:

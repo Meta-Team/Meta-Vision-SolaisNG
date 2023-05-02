@@ -6,13 +6,13 @@
 #define META_VISION_SOLAIS_IMAGESET_H
 
 #include <thread>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include "Parameters.h"
 #include "InputSource.h"
 
 namespace meta {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 class ImageSet : public InputSource {
 public:
