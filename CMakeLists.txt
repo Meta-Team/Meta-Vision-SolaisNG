@@ -19,7 +19,12 @@ endif()
 
 add_compile_definitions(PROJECT_NAME="${PROJECT_NAME}")
 
-set(CMAKE_CXX_STANDARD 20)
+
+if (MINGW)
+    set(CMAKE_CXX_STANDARD 17)
+else ()
+    set(CMAKE_CXX_STANDARD 20)
+endif()
 
 include(cmake/CPM.cmake)
 
