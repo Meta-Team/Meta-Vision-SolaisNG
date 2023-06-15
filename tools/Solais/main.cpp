@@ -276,8 +276,16 @@ std::unique_ptr<Serial> serial;
 
 int main(int argc, char *argv[]) {
 
-    fmt::print(fmt::bg(fmt::color::royal_blue) ,"Welcome to {}!\n\n", PROJECT_NAME);
+    fmt::print("Welcome to {}!\n\n", PROJECT_NAME);
 //    fmt::print(cv::getBuildInformation());
+    fmt::print("\n"
+               "     _______.  ______    __          ___       __       _______.   .__   __.   _______ \n"
+               "    /       | /  __  \\  |  |        /   \\     |  |     /       |   |  \\ |  |  /  _____|\n"
+               "   |   (----`|  |  |  | |  |       /  ^  \\    |  |    |   (----`   |   \\|  | |  |  __  \n"
+               "    \\   \\    |  |  |  | |  |      /  /_\\  \\   |  |     \\   \\       |  . `  | |  | |_ | \n"
+               ".----)   |   |  `--'  | |  `----./  _____  \\  |  | .----)   |      |  |\\   | |  |__| | \n"
+               "|_______/     \\______/  |_______/__/     \\__\\ |__| |_______/       |__| \\__|  \\______| \n"
+               "                                                                                       \n");
 
     CameraSdkInit(0);   // for MVCamera
 
