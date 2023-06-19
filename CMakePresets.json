@@ -1,0 +1,42 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Config",
+            "description": "Build using Ninja generator and GCC 11",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/default",
+            "cacheVariables": {
+                "CMAKE_CUDA_ARCHITECTURES": "87",
+                "CMAKE_CUDA_COMPILER": "/usr/local/cuda/bin/nvcc",
+                "SERIAL_DEVICE": "",
+                "CMAKE_PREFIX_PATH": "/snap/protobuf/current",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc-11",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++-11"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "solais_default",
+            "displayName": "Solais (Default)",
+            "description": "Build Solais with default config",
+            "configurePreset": "default",
+            "jobs": 0,
+            "targets": [
+                "Solais"
+            ]
+        },
+        {
+            "name": "solais_terminal_default",
+            "displayName": "Solais Terminal (Default)",
+            "description": "Build Solais Terminal with default config",
+            "configurePreset": "default",
+            "jobs": 0,
+            "targets": [
+                "SolaisTerminal"
+            ]
+        }
+    ]
+}
