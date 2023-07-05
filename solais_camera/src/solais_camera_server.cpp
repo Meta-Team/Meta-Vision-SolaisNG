@@ -28,7 +28,7 @@ CameraServer::CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCam
     RCLCPP_INFO(
       _node->get_logger(), "Calibration loaded from '%s'", _camera_info_url.c_str());
   } else {
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       _node->get_logger(), "Calibration file '%s' is missing", _camera_info_url.c_str());
   }
   _cam_info = std::make_shared<sensor_msgs::msg::CameraInfo>(_camera_info_manager->getCameraInfo());
@@ -105,7 +105,7 @@ inline void CameraServer::startTimer()
           rclcpp::Time time_stamp = _node->now();
           // publish image msg
           if (this->_cam_pub->getNumSubscribers() > 0) {
-            sensor_msgs::msg::Image::SharedPtr msg = std::make_shared<sensor_msgs::msg::Image>();
+            auto msg = std::make_shared<sensor_msgs::msg::Image>();
             msg->header.stamp = time_stamp;
             msg->header.frame_id = _camera_frame_id;
             msg->encoding = "bgr8";
@@ -140,7 +140,7 @@ inline void CameraServer::startTimer()
           rclcpp::Time stamp = _node->now();
           // publish image msg
           if (this->_legacy_cam_pub->getNumSubscribers() > 0) {
-            sensor_msgs::msg::Image::UniquePtr msg = std::make_unique<sensor_msgs::msg::Image>();
+            auto msg = std::make_unique<sensor_msgs::msg::Image>();
             msg->header.stamp = stamp;
             msg->header.frame_id = _camera_frame_id;
             msg->encoding = "bgr8";

@@ -15,9 +15,9 @@ class USBCameraNode : public rclcpp::Node
 public:
   explicit USBCameraNode(const rclcpp::NodeOptions & options);
 private:
-  std::string _device_path;
-  std::shared_ptr<USBCamera> _camera;
-  std::shared_ptr<CameraServer> _server;
+  std::string device_path_;
+  std::shared_ptr<USBCamera> camera_;
+  std::shared_ptr<CameraServer> server_;
 };
 }  // namespace solais_camera
 

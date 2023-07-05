@@ -4,7 +4,7 @@
   <name>solais_camera</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="jnxc1234567890@outlook.com">ros</maintainer>
+  <maintainer email="chiming2@illinois.edu">nice-mee</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -15,6 +15,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
+  <depend>solais_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
