@@ -6,10 +6,9 @@ namespace solais_camera
 IPCameraNode::IPCameraNode(const rclcpp::NodeOptions & options)
 : rclcpp::Node("ip_camera", options)
 {
-  this->declare_parameter("rtsp_url", "rtsp://172.19.192.1:554/live");
-  this->get_parameter("rtsp_url", _device_path);
-  _camera = std::make_shared<IPCamera>(_device_path);
-  _server = std::make_shared<CameraServer>(std::shared_ptr<rclcpp::Node>(this), _camera);
+  auto device_url = this->declare_parameter("rtsp_url", "rtsp://172.19.192.1:554/live");
+  _camera = std::make_shared<IPCamera>(device_url, params_);
+  _server = std::make_shared<CameraServer>(std::shared_ptr<rclcpp::Node>(this), _camera, params_);
 }
 }  // namespace solais_camera
 

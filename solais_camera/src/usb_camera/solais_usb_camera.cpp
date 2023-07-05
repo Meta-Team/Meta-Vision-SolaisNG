@@ -4,12 +4,9 @@
 
 namespace solais_camera
 {
-USBCamera::USBCamera(const std::string & device_path)
-: _device_path(device_path)
+USBCamera::USBCamera(const std::string & device_path, std::shared_ptr<CamParam> params)
+: MetaCamera(params), _device_path(device_path)
 {
-  _params.fps = 30;
-  _params.width = 640;
-  _params.height = 480;
 }
 
 USBCamera::~USBCamera()
@@ -30,8 +27,8 @@ bool USBCamera::open()
   }
   // set camera
   _cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-  _cap.set(cv::CAP_PROP_FRAME_WIDTH, _params.width);
-  _cap.set(cv::CAP_PROP_FRAME_HEIGHT, _params.height);
+  _cap.set(cv::CAP_PROP_FRAME_WIDTH, _params->width);
+  _cap.set(cv::CAP_PROP_FRAME_HEIGHT, _params->height);
   _is_opened = true;
   return true;
 }
@@ -61,14 +58,14 @@ bool USBCamera::getFrame(cv::Mat & image)
   return true;
 }
 
-void USBCamera::setParameter(const CamParam & params)
-{
-  _params = params;
-}
+// void USBCamera::setParameter(const CamParam & params)
+// {
+//   _params = params;
+// }
 
-void USBCamera::getParameter(CamParam & params)
-{
-  params = _params;
-}
+// void USBCamera::getParameter(CamParam & params)
+// {
+//   params = _params;
+// }
 
 }  // namespace solais_camera

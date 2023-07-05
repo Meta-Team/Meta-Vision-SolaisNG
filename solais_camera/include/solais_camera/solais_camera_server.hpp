@@ -16,7 +16,7 @@ namespace solais_camera
 class CameraServer
 {
 public:
-  CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCamera> camera);
+  CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCamera> camera, std::shared_ptr<CamParam> params);
 
 private:
   // Helper Functions
@@ -24,7 +24,7 @@ private:
   inline void startPublisher();
   inline void startTimer();
   inline void startService();
-  // Node and input source
+  // Parent node and input source
   rclcpp::Node::SharedPtr _node;
   std::shared_ptr<MetaCamera> _camera;
   // Publishers
@@ -49,7 +49,7 @@ private:
   // Reopen Count
   int reopen_cnt{0};
   // Camera Parameters
-  CamParam _params;
+  std::shared_ptr<CamParam> _params;
 };
 }  // namespace solais_camera
 

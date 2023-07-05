@@ -10,8 +10,8 @@ using namespace std::chrono_literals;
 
 namespace solais_camera
 {
-CameraServer::CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCamera> camera)
-: _node(node), _camera(camera)
+CameraServer::CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCamera> camera, std::shared_ptr<CamParam> params)
+: _node(node), _camera(camera), _params(params)
 {
   declareParameters();
 
@@ -36,43 +36,44 @@ CameraServer::CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCam
   startPublisher();
   startTimer();
   startService();
-  RCLCPP_INFO(_node->get_logger(), "Camera server started. Camera FPS: %d", _params.fps);
+  RCLCPP_INFO(_node->get_logger(), "Camera server started. Camera FPS: %d", (int)(_params->fps));
 }
 
 inline void CameraServer::declareParameters()
 {
   // Fetch parameters for basic camera info
-  _node->declare_parameter("camera_name", _camera_name);
-  _node->declare_parameter("frame_id", _camera_frame_id);
-  _node->declare_parameter("camera_info_url", _camera_info_url);
-  _node->declare_parameter("use_sensor_data_qos", _use_qos_profile_sensor_data);
-  _node->declare_parameter(
-    "enable_camera_publisher",
-    _enable_camera_publisher);
-  _node->get_parameter("camera_name", _camera_name);
-  _node->get_parameter("frame_id", _camera_frame_id);
-  _node->get_parameter("camera_info_url", _camera_info_url);
-  _node->get_parameter("use_sensor_data_qos", _use_qos_profile_sensor_data);
-  _node->get_parameter(
+  _camera_name = _node->declare_parameter("camera_name", _camera_name);
+  _camera_frame_id = _node->declare_parameter("frame_id", _camera_frame_id);
+  _camera_info_url = _node->declare_parameter("camera_info_url", _camera_info_url);
+  _use_qos_profile_sensor_data = _node->declare_parameter(
+    "use_sensor_data_qos",
+    _use_qos_profile_sensor_data);
+  _enable_camera_publisher = _node->declare_parameter(
     "enable_camera_publisher",
     _enable_camera_publisher);
   if (_camera_frame_id == "") {
     _camera_frame_id = _camera_name + "_optical";
   }
   // Set up camera paramters
-  int param;
-  constexpr int param_num = sizeof(CamParam) / sizeof(int);
-  _camera->getParameter(_params);
-  for (int i = 0; i < param_num; i++) {
-    param = _params.fetchByIndex(i);
-    _node->declare_parameter(kCamParamTypeNames[i], param);
-    _node->get_parameter(kCamParamTypeNames[i], param);
-    _params.fetchByIndex(i) = param;
-  }
-  _camera->setParameter(_params);
-  if (_params.fps <= 0) {
-    _params.fps = 30;
-    _camera->setParameter(_params);
+  _params->width = _node->declare_parameter<long>("width", _params->width);
+  _params->height = _node->declare_parameter<long>("height", _params->height);
+  _params->auto_exposure = _node->declare_parameter<bool>("auto_exposure", _params->auto_exposure);
+  _params->exposure = _node->declare_parameter<long>("exposure", _params->exposure);
+  _params->brightness = _node->declare_parameter<long>("brightness", _params->brightness);
+  _params->auto_white_balance = _node->declare_parameter<bool>(
+    "auto_white_balance", _params->auto_white_balance);
+  _params->white_balance = _node->declare_parameter<int>("white_balance", _params->white_balance);
+  _params->gain = _node->declare_parameter<long>("gain", _params->gain);
+  _params->rgb_gain_r = _node->declare_parameter<long>("rgb_gain.r", _params->rgb_gain_r);
+  _params->rgb_gain_g = _node->declare_parameter<long>("rgb_gain.g", _params->rgb_gain_g);
+  _params->rgb_gain_b = _node->declare_parameter<long>("rgb_gain.b", _params->rgb_gain_b);
+  _params->gamma = _node->declare_parameter<long>("gamma", _params->gamma);
+  _params->contrast = _node->declare_parameter<long>("contrast", _params->contrast);
+  _params->saturation = _node->declare_parameter<long>("saturation", _params->saturation);
+  _params->hue = _node->declare_parameter<long>("hue", _params->hue);
+  _params->fps = _node->declare_parameter<long>("fps", _params->fps);
+  if (_params->fps <= 0) {
+    _params->fps = 30;
   }
 }
 
@@ -121,7 +122,7 @@ inline void CameraServer::startTimer()
         } else {
           // try to reopen camera
           _status_ok = false;
-          if (reopen_cnt % _params.fps == 0) {
+          if (reopen_cnt % _params->fps == 0) {
             _camera->close();
             std::this_thread::sleep_for(100ms);
             if (_camera->open()) {
@@ -155,7 +156,7 @@ inline void CameraServer::startTimer()
         } else {
           // try to reopen camera
           _status_ok = false;
-          if (reopen_cnt % _params.fps == 0) {
+          if (reopen_cnt % _params->fps == 0) {
             _camera->close();
             std::this_thread::sleep_for(100ms);
             if (_camera->open()) {
@@ -168,7 +169,7 @@ inline void CameraServer::startTimer()
         }
       };
   }
-  auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / _params.fps));
+  auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / _params->fps));
   _timer = _node->create_wall_timer(period_ms, timer_callback);
 }
 
