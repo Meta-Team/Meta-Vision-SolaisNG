@@ -12,7 +12,7 @@ namespace solais_camera
 class IPCamera : public MetaCamera
 {
 public:
-  explicit IPCamera(const std::string & rtsp_path, std::shared_ptr<CamParam> param);
+  explicit IPCamera(std::shared_ptr<rclcpp::Node> node, const std::string & rtsp_path, std::shared_ptr<CamParam> param);
   ~IPCamera();
 
   bool open() override;
@@ -21,6 +21,7 @@ public:
   bool getFrame(cv::Mat & image) override;
 
 private:
+  std::shared_ptr<rclcpp::Node> _node;
   std::string _rtsp_path;
   cv::VideoCapture _cap;
   bool _opened{false};

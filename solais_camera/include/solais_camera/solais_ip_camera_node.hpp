@@ -11,14 +11,17 @@
 
 namespace solais_camera
 {
-class IPCameraNode : public rclcpp::Node
+class IPCameraNode
 {
 public:
   explicit IPCameraNode(const rclcpp::NodeOptions & options);
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface();
+
 private:
-  std::shared_ptr<IPCamera> _camera;
+  std::shared_ptr<rclcpp::Node> _node;
+  std::shared_ptr<MetaCamera> _camera;
   std::shared_ptr<CameraServer> _server;
-  std::shared_ptr<CamParam> params_ = std::make_shared<CamParam>();
+  std::shared_ptr<CamParam> params_ = std::make_shared<CamParam>();  // Camera parameter is shared between MetaCamera, CameraServer and this node
 };
 }  // namespace solais_camera
 
