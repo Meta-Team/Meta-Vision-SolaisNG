@@ -4,8 +4,7 @@ Meta-Vision-SolaisNG
 
 Meta-Vision-SolaisNG is a complete rewrite of the original [Meta-Vision-Solais](https://github.com/Meta-Team/Meta-Vision-Solais) project. It is based on ROS2 (Robot Operating System) as it is designed to be modular. Currently only the core components are implemented, the `SolaisTerminal` is still under development.
 
-> Note: 
-> _Solais_ means "light" in Irish. [Claíomh Solais](https://en.wikipedia.org/wiki/Cla%C3%ADomh_Solais), 
+> **Note**: _Solais_ means "light" in Irish. [Claíomh Solais](https://en.wikipedia.org/wiki/Cla%C3%ADomh_Solais), 
 "Sword of Light" or "Shining Sword,"  is a weapon that 
 appears in Irish and Scottish Gaelic folktales, reputedly as an Undefeatable Sword such that once unsheathed, 
 no one could escape its blows.
