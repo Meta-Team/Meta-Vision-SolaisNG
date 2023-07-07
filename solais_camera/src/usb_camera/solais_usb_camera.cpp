@@ -4,8 +4,8 @@
 
 namespace solais_camera
 {
-USBCamera::USBCamera(const std::string & device_path, std::shared_ptr<CamParam> params)
-: MetaCamera(params), _device_path(device_path)
+USBCamera::USBCamera(std::shared_ptr<rclcpp::Node> node, const std::string & device_path, std::shared_ptr<CamParam> params)
+:  MetaCamera(params), _node(node), _device_path(device_path)
 {
 }
 
@@ -57,15 +57,5 @@ bool USBCamera::getFrame(cv::Mat & image)
   }
   return true;
 }
-
-// void USBCamera::setParameter(const CamParam & params)
-// {
-//   _params = params;
-// }
-
-// void USBCamera::getParameter(CamParam & params)
-// {
-//   params = _params;
-// }
 
 }  // namespace solais_camera

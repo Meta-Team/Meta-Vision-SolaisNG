@@ -10,7 +10,9 @@ using namespace std::chrono_literals;
 
 namespace solais_camera
 {
-CameraServer::CameraServer(rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCamera> camera, std::shared_ptr<CamParam> params)
+CameraServer::CameraServer(
+  rclcpp::Node::SharedPtr node, std::shared_ptr<MetaCamera> camera,
+  std::shared_ptr<CamParam> params)
 : _node(node), _camera(camera), _params(params)
 {
   declareParameters();
@@ -83,8 +85,7 @@ inline void CameraServer::startPublisher()
   if (_enable_camera_publisher) {
     _cam_pub = std::make_shared<image_transport::CameraPublisher>(
       image_transport::create_camera_publisher(
-        _node.get(),
-        _camera_name + "/image_raw",
+        _node.get(), _camera_name + "/image_raw",
         _use_qos_profile_sensor_data ? rmw_qos_profile_sensor_data : rmw_qos_profile_default));
   } else {
     _legacy_cam_pub = std::make_shared<image_transport::Publisher>(
@@ -151,7 +152,7 @@ inline void CameraServer::startTimer()
             msg->is_bigendian = false;
             msg->data.assign(_img.datastart, _img.dataend);
             _legacy_cam_pub->publish(std::move(msg));
-            RCLCPP_INFO(_node->get_logger(), "Publishing image");
+            // RCLCPP_INFO(_node->get_logger(), "Publishing image");
           }
         } else {
           // try to reopen camera

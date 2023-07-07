@@ -80,8 +80,7 @@ bool CameraClient::connect()
   _img_sub = _node->create_subscription<sensor_msgs::msg::Image>(
     _camera_name + "/image_raw", 1,
     [this](const sensor_msgs::msg::Image::SharedPtr msg) {
-      auto img =
-      cv::Mat(msg->height, msg->width, CV_8UC3, const_cast<unsigned char *>(msg->data.data()));
+      auto img = cv::Mat(msg->height, msg->width, CV_8UC3, msg->data.data());
       _callback(img, msg->header.stamp);
     },
     sub_opt

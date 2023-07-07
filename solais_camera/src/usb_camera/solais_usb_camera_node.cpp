@@ -3,12 +3,16 @@
 
 namespace solais_camera
 {
-USBCameraNode::USBCameraNode(const rclcpp::NodeOptions & options)
-: rclcpp::Node("usb_camera", options)
+USBCameraNode::USBCameraNode(const rclcpp::NodeOptions & options) : node_(std::make_shared<rclcpp::Node>("usb_camera", options))
 {
-  auto device_path = this->declare_parameter("device_path", "/dev/video0");
-  camera_ = std::make_unique<USBCamera>(device_path, params_);
-  server_ = std::make_shared<CameraServer>(std::shared_ptr<rclcpp::Node>(this), camera_, params_);
+  auto device_path = node_->declare_parameter("device_path", "/dev/video0");
+  camera_ = std::make_unique<USBCamera>(node_, device_path, params_);
+  server_ = std::make_shared<CameraServer>(node_, camera_, params_);
+}
+
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr USBCameraNode::get_node_base_interface() const
+{
+  return node_->get_node_base_interface();
 }
 }  // namespace solais_camera
 

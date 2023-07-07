@@ -13,7 +13,7 @@ namespace solais_camera
 class USBCamera : public MetaCamera
 {
 public:
-  explicit USBCamera(const std::string & device_path, std::shared_ptr<CamParam> params);
+  explicit USBCamera(std::shared_ptr<rclcpp::Node> node, const std::string & device_path, std::shared_ptr<CamParam> params);
   ~USBCamera();
 
   bool open() override;
@@ -22,6 +22,7 @@ public:
   bool getFrame(cv::Mat & image) override;
 
 private:
+  std::shared_ptr<rclcpp::Node> _node;
   std::string _device_path;
   cv::VideoCapture _cap;
   bool _is_opened{false};

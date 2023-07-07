@@ -4,8 +4,8 @@
 
 namespace solais_camera
 {
-IPCamera::IPCamera(const std::string & rtsp_path, std::shared_ptr<CamParam> params)
-: MetaCamera(params), _rtsp_path(rtsp_path)
+IPCamera::IPCamera(std::shared_ptr<rclcpp::Node> node, const std::string & rtsp_path, std::shared_ptr<CamParam> params)
+: MetaCamera(params), _node(node), _rtsp_path(rtsp_path)
 {
 }
 
