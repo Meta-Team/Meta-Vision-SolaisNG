@@ -11,13 +11,15 @@ endif()
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
 ament_auto_find_build_dependencies()
 
 # Armor Detector
 add_library(solais_armor_detector SHARED
   src/detector/solais_armor_detector.cpp
   src/detector/solais_armor_detector_node.cpp
-  src/detector/solais_aiming_solver.cpp
+  src/detector/solais_pos_solver.cpp
+  src/detector/solais_armor_lenet.cpp
 )
 rclcpp_components_register_node(solais_armor_detector
   PLUGIN "solais_auto_aim::ArmorDetectorNode"
@@ -32,7 +34,9 @@ ament_target_dependencies(solais_armor_detector
   OpenCV
   solais_camera
   solais_interfaces
+  magic_enum
 )
+target_link_libraries(solais_armor_detector magic_enum::magic_enum)
 
 # Armor Tracker
 # add_library(solais_armor_tracker_component SHARED
@@ -58,6 +62,10 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+install(DIRECTORY models
+  DESTINATION share/${PROJECT_NAME}
+)
 
 install(TARGETS solais_armor_detector
     EXPORT export_${PROJECT_NAME}

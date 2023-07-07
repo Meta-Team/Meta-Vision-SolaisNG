@@ -1,7 +1,7 @@
 // Copyright 2023 Meta-Team
 // Licensed under the MIT License.
-#ifndef SOLAIS_a_Nonnull
-#define SOLAIS_a_Nonnull
+#ifndef SOLAIS_AUTO_AIM__ARMOR_HPP_
+#define SOLAIS_AUTO_AIM__ARMOR_HPP_
 
 #include <algorithm>
 #include <string>
@@ -13,7 +13,6 @@ namespace solais_auto_aim {
 const int RED = 0;
 const int BLUE = 1;
 
-enum class ArmorType { SMALL, LARGE, INVALID };
 const std::string ARMOR_TYPE_STR[3] = {"small", "large", "invalid"};
 
 struct Light : public cv::RotatedRect
@@ -43,6 +42,20 @@ struct Light : public cv::RotatedRect
 
 struct Armor
 {
+  enum class ArmorSizeType { SMALL, LARGE, INVALID };
+  enum ArmorNumberType
+  {
+    ARMOR_1 = 0,
+    ARMOR_2 = 1,
+    ARMOR_3 = 2,
+    ARMOR_4 = 3,
+    ARMOR_5 = 4,
+    ARMOR_OUTPOST = 5,
+    ARMOR_GUARD = 6,
+    ARMOR_BASE = 7,
+    ARMOR_INVALID = 8
+  };
+
   Armor() = default;
   Armor(const Light & l1, const Light & l2)
   {
@@ -54,18 +67,18 @@ struct Armor
     center = (left_light.center + right_light.center) / 2;
   }
 
-  // Light pairs part
+  // Light pairs result
   Light left_light, right_light;
   cv::Point2f center;
-  ArmorType type;
+  ArmorSizeType size_type;
 
-  // Number part
-  cv::Mat number_img;
-  std::string number;
+  // Number detection result
+  // cv::Mat number_img;
+  ArmorNumberType number;
   float confidence;
   std::string classification_result;
 };
 
-}
+}  // namespace solais_auto_aim
 
-#endif
+#endif  // SOLAIS_AUTO_AIM__ARMOR_HPP_

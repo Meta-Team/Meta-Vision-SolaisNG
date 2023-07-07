@@ -1,30 +1,30 @@
 // Copyright 2023 Meta-Team
 // Licensed under the MIT License.
 #include "solais_auto_aim/solais_armor_detector.hpp"
+#include "magic_enum.hpp"
 
 namespace solais_auto_aim
 {
 ArmorDetector::ArmorDetector(
   const int & bin_threshold, const int & color, const LightParams & light,
-  const ArmorParams & armor)
+  const ArmorParams & armor, const std::string & model_path, const double conf_threshold,
+  const std::vector<Armor::ArmorNumberType> & ignored_classes)
 : binary_thres_(bin_threshold), detect_color_(color), light_params_(light), armor_params_(armor)
 {
+  lenet_ = std::make_unique<ArmorLeNet>(model_path, conf_threshold, ignored_classes);
 }
 
 std::vector<Armor> ArmorDetector::detect(const cv::Mat & input)
 {
+  // Detect possible armors
   cv::Mat copy = input.clone();
   preprocessImage(copy);
   findLights(input, copy);
   matchLights();
 
-  // @todo: implement classifier
+  // Classify armors
   if (!buf_armors_.empty()) {
-    //   classifier->extractNumbers(input, armors_);
-    //   classifier->classify(armors_);
-    for (auto & armor : buf_armors_) {
-      armor.number = "0";
-    }
+    lenet_->identifyNumbers(input, buf_armors_);
   }
 
   return buf_armors_;
@@ -118,9 +118,9 @@ void ArmorDetector::matchLights()
       }
 
       auto type = isArmor(*light_1, *light_2);
-      if (type != ArmorType::INVALID) {
+      if (type != Armor::ArmorSizeType::INVALID) {
         auto armor = Armor(*light_1, *light_2);
-        armor.type = type;
+        armor.size_type = type;
         buf_armors_.emplace_back(armor);
       }
     }
@@ -148,7 +148,7 @@ bool ArmorDetector::containLight(
   return false;
 }
 
-ArmorType ArmorDetector::isArmor(const Light & light_1, const Light & light_2) const
+Armor::ArmorSizeType ArmorDetector::isArmor(const Light & light_1, const Light & light_2) const
 {
   // Ratio of the length of 2 lights (short side / long side)
   float light_length_ratio = light_1.length < light_2.length ? light_1.length / light_2.length :
@@ -171,12 +171,13 @@ ArmorType ArmorDetector::isArmor(const Light & light_1, const Light & light_2) c
   bool is_armor = light_ratio_ok && center_distance_ok && angle_ok;
 
   // Judge armor type
-  ArmorType type;
+  Armor::ArmorSizeType type;
   if (is_armor) {
     type = center_distance >
-      armor_params_.min_large_center_distance ? ArmorType::LARGE : ArmorType::SMALL;
+      armor_params_.min_large_center_distance ? Armor::ArmorSizeType::LARGE : Armor::ArmorSizeType::
+      SMALL;
   } else {
-    type = ArmorType::INVALID;
+    type = Armor::ArmorSizeType::INVALID;
   }
 
   // Fill in debug information
@@ -205,12 +206,15 @@ void ArmorDetector::drawResults(cv::Mat & img) const
   for (const auto & armor : buf_armors_) {
     cv::line(img, armor.left_light.top, armor.right_light.bottom, cv::Scalar(0, 255, 0), 2);
     cv::line(img, armor.left_light.bottom, armor.right_light.top, cv::Scalar(0, 255, 0), 2);
+    cv::putText(img, cv::String(magic_enum::enum_name(armor.number)),
+      armor.center, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 255, 255), 2);
   }
 
   // Show numbers and confidence
   for (const auto & armor : buf_armors_) {
+    std::string classification_result_str = std::string(armor.classification_result);
     cv::putText(
-      img, armor.classification_result, armor.left_light.top, cv::FONT_HERSHEY_SIMPLEX, 0.8,
+      img, classification_result_str, armor.left_light.top, cv::FONT_HERSHEY_SIMPLEX, 0.8,
       cv::Scalar(0, 255, 255), 2);
   }
 }

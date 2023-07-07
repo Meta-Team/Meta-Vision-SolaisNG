@@ -1,10 +1,10 @@
 // Copyright 2023 Meta-Team
 // Licensed under the MIT License.
-
-#include <memory>
-#include <opencv2/highgui.hpp>
-#include <rclcpp/logging.hpp>
 #include "solais_auto_aim/solais_armor_detector_node.hpp"
+#include <vector>
+#include <memory>
+#include "opencv2/highgui.hpp"
+#include "rclcpp/logging.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include "rclcpp/node.hpp"
 
@@ -13,7 +13,7 @@ namespace solais_auto_aim
 ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
 {
   node_ = std::make_shared<rclcpp::Node>("armor_detector", options);
-  camera_client_ = std::make_shared<solais_camera::CameraClient>(node_);
+  camera_client_ = std::make_unique<solais_camera::CameraClient>(node_);
 
   RCLCPP_INFO(node_->get_logger(), "Starting Armor Detector Node...");
 
@@ -66,25 +66,22 @@ inline void ArmorDetectorNode::initDetector()
     .max_large_center_distance = node_->declare_parameter("armor.max_large_center_distance", 5.5),
     .max_angle = node_->declare_parameter("armor.max_angle", 35.0)};
 
+  // Set LeNet params
+  auto pkg_path = ament_index_cpp::get_package_share_directory("solais_auto_aim");
+  RCLCPP_INFO_STREAM(node_->get_logger(), "Package path: " << pkg_path);
+  auto model_path = pkg_path + "/models/chenjunn_mlp.onnx";
+  double lenet_threshold = node_->declare_parameter("classifier_threshold", 0.7);
+  //  @todo: implement parameter for ignored classes
+  auto ignored_classes = std::vector({Armor::ARMOR_INVALID});
+
   armor_detector_ = std::make_unique<ArmorDetector>(
     binary_thres, detect_color, light_params,
-    armor_params);
-
-  // Classifier initialization
-  auto pkg_path = ament_index_cpp::get_package_share_directory("armor_detector");
-  auto model_path = pkg_path + "/model/mlp.onnx";
-  auto label_path = pkg_path + "/model/label.txt";
-  // double threshold = node_->declare_parameter("classifier_threshold", 0.7);
-  std::vector<std::string> ignore_classes = node_->declare_parameter(
-    "ignore_classes",
-    std::vector<std::string>{"negative"});
-  // armor_detector_->classifier = std::make_shared<NumberClassifier>(model_path, label_path, threshold, ignore_classes);
+    armor_params, model_path, lenet_threshold, ignored_classes);
 }
 
 void ArmorDetectorNode::imageCallback(const cv::Mat & img, const rclcpp::Time & stamp)
 {
   // Debug code for displaying image
-  RCLCPP_INFO(node_->get_logger(), "Image received, stamp: %f", stamp.seconds());
   cv::imshow("image", img);
   cv::waitKey(1);
 
@@ -93,7 +90,6 @@ void ArmorDetectorNode::imageCallback(const cv::Mat & img, const rclcpp::Time & 
   auto final_time = node_->now();
   auto latency = (final_time - stamp).seconds() * 1000;
   RCLCPP_INFO_STREAM(node_->get_logger(), "Latency: " << latency << "ms");
-  RCLCPP_INFO_STREAM(node_->get_logger(), "Number of detected armors: " << armors.size());
 
   cv::Mat img_copy = img.clone();
   armor_detector_->drawResults(img_copy);

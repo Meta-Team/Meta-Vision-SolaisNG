@@ -6,9 +6,11 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "opencv2/opencv.hpp"
 #include "solais_auto_aim/armor.hpp"
+#include "solais_auto_aim/solais_armor_lenet.hpp"
 #include "solais_interfaces/msg/armor.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -42,21 +44,14 @@ public:
 
   ArmorDetector(
     const int & bin_threshold, const int & color, const LightParams & light,
-    const ArmorParams & armor);
+    const ArmorParams & armor, const std::string & model_path, const double conf_threshold,
+    const std::vector<Armor::ArmorNumberType> & ignored_classes = {});
 
   std::vector<Armor> detect(const cv::Mat & input);
 
   // For debug usage
   cv::Mat getAllNumbersImage();
   void drawResults(cv::Mat & img) const;
-
-  // Parameters
-  int binary_thres_;
-  int detect_color_;
-  LightParams light_params_;
-  ArmorParams armor_params_;
-
-  // std::unique_ptr<NumberClassifier> classifier;
 
   // Debug msgs
   // cv::Mat binary_img;
@@ -72,10 +67,17 @@ private:
   bool containLight(
     const Light & light_1, const Light & light_2,
     const std::vector<Light> & lights) const;
-  ArmorType isArmor(const Light & light_1, const Light & light_2) const;
+  Armor::ArmorSizeType isArmor(const Light & light_1, const Light & light_2) const;
+
+  // Parameters
+  int binary_thres_;
+  int detect_color_;
+  LightParams light_params_;
+  ArmorParams armor_params_;
 
   std::vector<Light> buf_lights_;
   std::vector<Armor> buf_armors_;
+  std::unique_ptr<ArmorLeNet> lenet_;
 };
 }  // namespace solais_auto_aim
 
