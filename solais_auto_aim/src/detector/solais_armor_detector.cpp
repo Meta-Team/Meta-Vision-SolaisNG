@@ -1,7 +1,9 @@
 // Copyright 2023 Meta-Team
 // Licensed under the MIT License.
 #include "solais_auto_aim/solais_armor_detector.hpp"
+#include <vector>
 #include "magic_enum.hpp"
+#include "solais_auto_aim/armor.hpp"
 
 namespace solais_auto_aim
 {
@@ -14,20 +16,18 @@ ArmorDetector::ArmorDetector(
   lenet_ = std::make_unique<ArmorLeNet>(model_path, conf_threshold, ignored_classes);
 }
 
-std::vector<Armor> ArmorDetector::detect(const cv::Mat & input)
+void ArmorDetector::detect(const cv::Mat & input, std::vector<Armor> & armors)
 {
   // Detect possible armors
   cv::Mat copy = input.clone();
   preprocessImage(copy);
   findLights(input, copy);
-  matchLights();
+  matchLights(armors);
 
   // Classify armors
-  if (!buf_armors_.empty()) {
-    lenet_->identifyNumbers(input, buf_armors_);
+  if (!armors.empty()) {
+    lenet_->identifyNumbers(input, armors);
   }
-
-  return buf_armors_;
 }
 
 void ArmorDetector::preprocessImage(cv::Mat & img) const
@@ -103,9 +103,8 @@ bool ArmorDetector::isLight(const Light & light) const
   return is_light;
 }
 
-void ArmorDetector::matchLights()
+void ArmorDetector::matchLights(std::vector<Armor> & armors)
 {
-  buf_armors_.clear();
   // this->debug_armors.data.clear();
 
   // Loop all the pairing of lights
@@ -121,7 +120,7 @@ void ArmorDetector::matchLights()
       if (type != Armor::ArmorSizeType::INVALID) {
         auto armor = Armor(*light_1, *light_2);
         armor.size_type = type;
-        buf_armors_.emplace_back(armor);
+        armors.emplace_back(armor);
       }
     }
   }
@@ -192,7 +191,7 @@ Armor::ArmorSizeType ArmorDetector::isArmor(const Light & light_1, const Light &
   return type;
 }
 
-void ArmorDetector::drawResults(cv::Mat & img) const
+void ArmorDetector::drawResults(cv::Mat & img, std::vector<Armor> armors) const
 {
   // Draw Lights
   for (const auto & light : buf_lights_) {
@@ -203,7 +202,7 @@ void ArmorDetector::drawResults(cv::Mat & img) const
   }
 
   // Draw armors
-  for (const auto & armor : buf_armors_) {
+  for (const auto & armor : armors) {
     cv::line(img, armor.left_light.top, armor.right_light.bottom, cv::Scalar(0, 255, 0), 2);
     cv::line(img, armor.left_light.bottom, armor.right_light.top, cv::Scalar(0, 255, 0), 2);
     cv::putText(img, cv::String(magic_enum::enum_name(armor.number)),
@@ -211,7 +210,7 @@ void ArmorDetector::drawResults(cv::Mat & img) const
   }
 
   // Show numbers and confidence
-  for (const auto & armor : buf_armors_) {
+  for (const auto & armor : armors) {
     std::string classification_result_str = std::string(armor.classification_result);
     cv::putText(
       img, classification_result_str, armor.left_light.top, cv::FONT_HERSHEY_SIMPLEX, 0.8,

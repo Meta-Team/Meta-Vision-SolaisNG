@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/timer.hpp>
 #include "solais_auto_aim/solais_armor_detector.hpp"
 #include "solais_auto_aim/solais_pos_solver.hpp"
 #include "solais_camera/solais_camera_client.hpp"
@@ -26,11 +27,12 @@ public:
 private:
   inline void initDetector();
 
-  void imageCallback(const cv::Mat & img, const rclcpp::Time & stamp);
+  void imageCallback(const cv::Mat & img, const std_msgs::msg::Header & header);
 
   rclcpp::Node::SharedPtr node_;
 
-  std::shared_ptr<ArmorDetector> armor_detector_;
+  std::unique_ptr<ArmorDetector> armor_detector_;
+  std::vector<Armor> armors_;  // Pre-allocated armors
 
   // Receive image from solais_camera_client
   std::unique_ptr<solais_camera::CameraClient> camera_client_;
@@ -39,13 +41,12 @@ private:
   solais_interfaces::msg::Armors armors_msg_;
   rclcpp::Publisher<solais_interfaces::msg::Armors>::SharedPtr armors_pub_;
 
-  // Camera info part
-  rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
+  // Camera info
+  rclcpp::TimerBase::SharedPtr cam_info_timer_;
   cv::Point2f cam_center_;
-  // std::shared_ptr<sensor_msgs::msg::CameraInfo> cam_info_;
 
-  // Aiming Solver
-  // std::unique_ptr<AimingSolver> aiming_solver_;
+  // Position Solver
+  std::unique_ptr<PosSolver> pos_solver_;
 };
 
 }  // namespace solais_auto_aim

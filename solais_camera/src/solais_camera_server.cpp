@@ -176,6 +176,5 @@ inline void CameraServer::startTimer()
 
 inline void CameraServer::startService()
 {
-  // To be implemented
 }
 }  // namespace solais_camera
