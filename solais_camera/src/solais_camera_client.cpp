@@ -7,7 +7,6 @@
 #include <opencv2/opencv.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>
-#include <solais_interfaces/srv/detail/get_camera_info__struct.hpp>
 #include <string>
 #include "sensor_msgs/msg/image.hpp"
 #include "std_msgs/msg/header.hpp"

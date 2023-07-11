@@ -3,8 +3,8 @@
 #define SOLAIS_CAMERA__SOLAIS_USB_CAMERA_HPP_
 #include <memory>
 #include <string>
-#include <opencv2/opencv.hpp>
 
+#include <opencv2/opencv.hpp>
 #include "solais_camera/solais_meta_camera.hpp"
 
 

@@ -9,6 +9,23 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+message(STATUS "System architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+    set(MVSDK_LIB_DIR "mvsdk/lib/x64")
+    link_directories("mvsdk/lib/x64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    set(MVSDK_LIB_DIR "mvsdk/lib/arm64")
+    link_directories("mvsdk/lib/arm64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    set(MVSDK_LIB_DIR "mvsdk/lib/arm64")
+    link_directories("mvsdk/lib/arm64")
+else()
+    message(FATAL_ERROR "Unkown host system architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}!")
+endif()
+set(MVSDK_LIB_SO "${PROJECT_SOURCE_DIR}/${MVSDK_LIB_DIR}/libMVSDK.so")
+
+
 # Build server and client
 add_library(${PROJECT_NAME} SHARED
   src/solais_camera_server.cpp
@@ -51,6 +68,18 @@ target_include_directories(ip_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
+add_library(mindvision_camera_component SHARED
+  src/mindvision_camera/solais_mindvision_camera.cpp
+  src/mindvision_camera/solais_mindvision_camera_node.cpp)
+target_link_libraries(mindvision_camera_component ${PROJECT_NAME})
+target_include_directories(mindvision_camera_component PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/mvsdk/include>
+  $<INSTALL_INTERFACE:include>)
+target_link_libraries(mindvision_camera_component MVSDK)
+rclcpp_components_register_node(mindvision_camera_component
+  PLUGIN "solais_camera::MindVisionCameraNode"
+  EXECUTABLE mindvision_camera_node)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -71,11 +100,17 @@ install(TARGETS
   ${PROJECT_NAME}
   usb_camera_component
   ip_camera_component
+  mindvision_camera_component
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
+)
+
+install(
+    FILES ${MVSDK_LIB_SO}
+    DESTINATION lib
 )
 
 ament_export_targets(export_${PROJECT_NAME})
