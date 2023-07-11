@@ -1,10 +1,16 @@
 // Copyright 2023 Meta-Team
 #include "solais_camera/solais_camera_client.hpp"
+#include "rmw/qos_profiles.h"
 #include "solais_camera/solais_meta_camera.hpp"
 
+#include <algorithm>
 #include <opencv2/opencv.hpp>
-#include <sensor_msgs/msg/detail/image__struct.hpp>
+#include <rclcpp/logging.hpp>
+#include <rclcpp/qos.hpp>
+#include <string>
 #include "sensor_msgs/msg/image.hpp"
+#include "std_msgs/msg/header.hpp"
+#include "solais_interfaces/srv/get_camera_info.hpp"
 
 
 using namespace std::chrono_literals;
@@ -36,8 +42,7 @@ void CameraClient::setCameraName(const std::string_view & camera_name)
 }
 
 void CameraClient::setCameraCallback(
-  std::function<void(const cv::Mat &,
-  const rclcpp::Time &)> callback)
+  const std::function<void(const cv::Mat &, const std_msgs::msg::Header &)> & callback)
 {
   if (_connected) {
     RCLCPP_ERROR(
@@ -81,7 +86,7 @@ bool CameraClient::connect()
     _camera_name + "/image_raw", 1,
     [this](const sensor_msgs::msg::Image::SharedPtr msg) {
       auto img = cv::Mat(msg->height, msg->width, CV_8UC3, msg->data.data());
-      _callback(img, msg->header.stamp);
+      _callback(img, msg->header);
     },
     sub_opt
   );
@@ -89,7 +94,7 @@ bool CameraClient::connect()
   // Create executor
   _executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   _executor->add_callback_group(_callback_group, _node->get_node_base_interface());
-  _executor_thread = std::make_unique<std::thread>([&]() {_executor->spin();});
+  _executor_thread = std::make_unique<std::thread>([this]() {_executor->spin();});
 
   // Set connected
   _connected = true;
@@ -109,9 +114,22 @@ void CameraClient::disconnect()
   }
 }
 
-bool CameraClient::getCameraInfo(sensor_msgs::msg::CameraInfo & cam_info) const
+bool CameraClient::getCameraInfo(
+  const std::function<void(sensor_msgs::msg::CameraInfo::ConstSharedPtr)> & service_callback)
 {
-  // @todo: implement this
+  if (_camera_name.empty()) {
+    RCLCPP_ERROR(
+      _node->get_logger(),
+      "[CameraClient] camera name is empty, get camera info failed.");
+    return false;
+  }
+  _camera_info_sub = _node->create_subscription<sensor_msgs::msg::CameraInfo>(
+    _camera_name + "/camera_info", rclcpp::SystemDefaultsQoS(),
+    [this, service_callback](sensor_msgs::msg::CameraInfo::ConstSharedPtr camera_info) {
+      RCLCPP_INFO(_node->get_logger(), "Camera info received.");
+      service_callback(camera_info);
+      _camera_info_sub.reset();
+    });
   return true;
 }
 

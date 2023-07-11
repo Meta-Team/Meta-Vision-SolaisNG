@@ -47,11 +47,11 @@ public:
     const ArmorParams & armor, const std::string & model_path, const double conf_threshold,
     const std::vector<Armor::ArmorNumberType> & ignored_classes = {});
 
-  std::vector<Armor> detect(const cv::Mat & input);
+  void detect(const cv::Mat & input, std::vector<Armor> & armors);
 
   // For debug usage
   cv::Mat getAllNumbersImage();
-  void drawResults(cv::Mat & img) const;
+  void drawResults(cv::Mat & img, std::vector<Armor> armors) const;
 
   // Debug msgs
   // cv::Mat binary_img;
@@ -62,7 +62,7 @@ private:
   // Helper functions
   void preprocessImage(cv::Mat & img) const;
   void findLights(const cv::Mat & rbg_img, const cv::Mat & binary_img);
-  void matchLights();
+  void matchLights(std::vector<Armor> & armors);
   bool isLight(const Light & possible_light) const;
   bool containLight(
     const Light & light_1, const Light & light_2,
@@ -76,7 +76,6 @@ private:
   ArmorParams armor_params_;
 
   std::vector<Light> buf_lights_;
-  std::vector<Armor> buf_armors_;
   std::unique_ptr<ArmorLeNet> lenet_;
 };
 }  // namespace solais_auto_aim

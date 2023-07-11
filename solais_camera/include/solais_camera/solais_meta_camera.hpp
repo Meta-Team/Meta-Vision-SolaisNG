@@ -13,7 +13,7 @@ struct CamParam
 {
   long width;
   long height;
-  bool auto_exposure;
+  long auto_exposure;
   long exposure;
   long brightness;
   long auto_white_balance;

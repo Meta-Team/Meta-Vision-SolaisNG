@@ -21,11 +21,11 @@ public:
   ~CameraClient();
 
   void setCameraName(const std::string_view & camera_name);
-  void setCameraCallback(std::function<void(const cv::Mat &, const rclcpp::Time &)> callback);
+  void setCameraCallback(const std::function<void(const cv::Mat &, const std_msgs::msg::Header &)> & callback);
   bool connect();
   void disconnect();
   bool isConnected() const;
-  bool getCameraInfo(sensor_msgs::msg::CameraInfo & cam_info) const;
+  bool getCameraInfo(const std::function<void(sensor_msgs::msg::CameraInfo::ConstSharedPtr)> & service_callback);
 
 private:
   // Consumer node
@@ -35,13 +35,15 @@ private:
   // Image subscriber
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _img_sub;
   // Camera callback
-  std::function<void(const cv::Mat &, const rclcpp::Time &)> _callback;
+  std::function<void(const cv::Mat &, const std_msgs::msg::Header &)> _callback;
   rclcpp::CallbackGroup::SharedPtr _callback_group;
   // Executor
   rclcpp::executors::SingleThreadedExecutor::SharedPtr _executor;
   std::unique_ptr<std::thread> _executor_thread;
   // Internal Parameters
   bool _connected{false};
+  // Camera info subscriber
+  rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr _camera_info_sub;
 };
 }  // namespace solais_camera
 

@@ -59,7 +59,7 @@ inline void CameraServer::declareParameters()
   // Set up camera paramters
   _params->width = _node->declare_parameter<long>("width", _params->width);
   _params->height = _node->declare_parameter<long>("height", _params->height);
-  _params->auto_exposure = _node->declare_parameter<bool>("auto_exposure", _params->auto_exposure);
+  _params->auto_exposure = _node->declare_parameter<long>("auto_exposure", _params->auto_exposure);
   _params->exposure = _node->declare_parameter<long>("exposure", _params->exposure);
   _params->brightness = _node->declare_parameter<long>("brightness", _params->brightness);
   _params->auto_white_balance = _node->declare_parameter<bool>(
@@ -176,6 +176,5 @@ inline void CameraServer::startTimer()
 
 inline void CameraServer::startService()
 {
-  // To be implemented
 }
 }  // namespace solais_camera

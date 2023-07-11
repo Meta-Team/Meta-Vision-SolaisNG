@@ -35,6 +35,7 @@ ament_target_dependencies(solais_armor_detector
   solais_camera
   solais_interfaces
   magic_enum
+  tf2_geometry_msgs
 )
 target_link_libraries(solais_armor_detector magic_enum::magic_enum)
 
