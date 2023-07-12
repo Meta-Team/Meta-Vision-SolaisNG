@@ -49,24 +49,24 @@ add_library(usb_camera_component SHARED
   src/usb_camera/solais_usb_camera.cpp
   src/usb_camera/solais_usb_camera_node.cpp)
 target_link_libraries(usb_camera_component ${PROJECT_NAME})
-rclcpp_components_register_node(usb_camera_component
-  PLUGIN "solais_camera::USBCameraNode"
-  EXECUTABLE usb_camera_node)
 target_include_directories(usb_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+rclcpp_components_register_node(usb_camera_component
+  PLUGIN "solais_camera::USBCameraNode"
+  EXECUTABLE usb_camera_node)
 
 # Build ip_camera
 add_library(ip_camera_component SHARED
   src/ip_camera/solais_ip_camera.cpp
   src/ip_camera/solais_ip_camera_node.cpp)
 target_link_libraries(ip_camera_component ${PROJECT_NAME})
-rclcpp_components_register_node(ip_camera_component
-  PLUGIN "solais_camera::IPCameraNode"
-  EXECUTABLE ip_camera_node)
 target_include_directories(ip_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+rclcpp_components_register_node(ip_camera_component
+  PLUGIN "solais_camera::IPCameraNode"
+  EXECUTABLE ip_camera_node)
 
 add_library(mindvision_camera_component SHARED
   src/mindvision_camera/solais_mindvision_camera.cpp
