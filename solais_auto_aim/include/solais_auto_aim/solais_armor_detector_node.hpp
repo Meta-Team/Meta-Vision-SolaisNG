@@ -11,6 +11,7 @@
 #include "solais_camera/solais_camera_client.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "solais_interfaces/msg/armors.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 namespace solais_auto_aim
 {
@@ -26,6 +27,8 @@ public:
 
 private:
   inline void initDetector();
+
+  inline void createRvizMarker();
 
   void imageCallback(const cv::Mat & img, const std_msgs::msg::Header & header);
 
@@ -44,6 +47,12 @@ private:
   // Camera info
   rclcpp::TimerBase::SharedPtr cam_info_timer_;
   cv::Point2f cam_center_;
+
+  // Rviz Marker
+  visualization_msgs::msg::Marker armor_marker_msg_;
+  visualization_msgs::msg::Marker class_marker_msg_;
+  visualization_msgs::msg::MarkerArray marker_array_msg_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 
   // Position Solver
   std::unique_ptr<PosSolver> pos_solver_;

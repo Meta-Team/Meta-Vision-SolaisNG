@@ -21,9 +21,6 @@ add_library(solais_armor_detector SHARED
   src/detector/solais_pos_solver.cpp
   src/detector/solais_armor_lenet.cpp
 )
-rclcpp_components_register_node(solais_armor_detector
-  PLUGIN "solais_auto_aim::ArmorDetectorNode"
-  EXECUTABLE solais_armor_detector_node)
 target_include_directories(solais_armor_detector PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -36,8 +33,12 @@ ament_target_dependencies(solais_armor_detector
   solais_interfaces
   magic_enum
   tf2_geometry_msgs
+  visualization_msgs
 )
 target_link_libraries(solais_armor_detector magic_enum::magic_enum)
+rclcpp_components_register_node(solais_armor_detector
+  PLUGIN "solais_auto_aim::ArmorDetectorNode"
+  EXECUTABLE solais_armor_detector_node)
 
 # Armor Tracker
 # add_library(solais_armor_tracker_component SHARED
