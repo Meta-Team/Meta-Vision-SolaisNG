@@ -12,23 +12,30 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
+#include "cv_bridge/cv_bridge.h"
 
 namespace solais_auto_aim
 {
 ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
 {
+  debug_mode_ = node_->declare_parameter<bool>("debug", false);
   node_ = std::make_shared<rclcpp::Node>("armor_detector", options);
   RCLCPP_INFO(node_->get_logger(), "Starting Armor Detector Node...");
 
   armors_.reserve(100);  // Pre-allocate 100 armors
   initDetector();
 
-  // createRvizMarker();
-  cv::namedWindow("detected", cv::WINDOW_NORMAL);
+  createRvizMarker();
 
   armors_pub_ = node_->create_publisher<solais_interfaces::msg::Armors>(
     "/detector/armors",
     rclcpp::SensorDataQoS());
+
+  // Debug publisher
+  if (debug_mode_) {
+    debug_img_pub_ = image_transport::create_publisher(node_.get(), "/detector/debug_viz_img");
+  }
+
   camera_client_ = std::make_unique<solais_camera::CameraClient>(node_);
   auto camera_name = node_->declare_parameter("camera_name", "default_camera");
   camera_client_->setCameraName(camera_name);
@@ -37,12 +44,14 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
       imageCallback(img, header);
     });
   using std::chrono_literals::operator""s;
-  cam_info_timer_ = node_->create_wall_timer(5s, [this](){
-    camera_client_->getCameraInfo([this](const auto camera_info){
-      pos_solver_ = std::make_unique<PosSolver>(camera_info->k, camera_info->d);
+  cam_info_timer_ = node_->create_wall_timer(
+    5s, [this]() {
+      camera_client_->getCameraInfo(
+        [this](const auto camera_info) {
+          pos_solver_ = std::make_unique<PosSolver>(camera_info->k, camera_info->d);
+        });
+      cam_info_timer_->cancel();
     });
-    cam_info_timer_->cancel();
-  });
   camera_client_->connect();
 }
 
@@ -111,7 +120,9 @@ inline void ArmorDetectorNode::createRvizMarker()
   class_marker_msg_.color.b = 1.0;
   class_marker_msg_.lifetime = rclcpp::Duration::from_seconds(0.1);
 
-  marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("/detector/markers", 10);
+  marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(
+    "/detector/markers",
+    10);
 }
 
 void ArmorDetectorNode::imageCallback(const cv::Mat & img, const std_msgs::msg::Header & header)
@@ -124,30 +135,29 @@ void ArmorDetectorNode::imageCallback(const cv::Mat & img, const std_msgs::msg::
   armor_detector_->detect(img, armors_);
 
   // Debug code for showing the result
-  // TODO - implement debug mode
-  cv::Mat img_copy = img.clone();
-  armor_detector_->drawResults(img_copy, armors_);
-  cv::imshow("detected", img_copy);
-  cv::waitKey(1);
+  if (debug_mode_) {
+    cv::Mat img_copy = img.clone();
+    armor_detector_->drawResults(img_copy, armors_);
+    debug_img_pub_.publish(cv_bridge::CvImage(header, "bgr8", img_copy).toImageMsg());
+  }
 
   if (pos_solver_.get() == nullptr) {
-    // This may happen 
+    // This may happen
     RCLCPP_WARN(node_->get_logger(), "Camera info not received yet");
     return;
   }
 
   armors_msg_.header = header;
-  // armor_marker_msg_.header = header;
-  // class_marker_msg_.header = header;
+  armor_marker_msg_.header = header;
+  class_marker_msg_.header = header;
   armors_msg_.armors.clear();
-  // marker_array_msg_.markers.clear();
-  // armor_marker_msg_.id = 0;
-  // class_marker_msg_.id = 0;
+  marker_array_msg_.markers.clear();
+  armor_marker_msg_.id = 0;
+  class_marker_msg_.id = 0;
 
   // Solve PnP
   solais_interfaces::msg::Armor armor_msg;
-  for (const auto & armor : armors_)
-  {
+  for (const auto & armor : armors_) {
     cv::Mat rotation_vec;
     cv::Mat translation_vec;
     pos_solver_->solvePosition(armor, rotation_vec, translation_vec);
@@ -172,27 +182,27 @@ void ArmorDetectorNode::imageCallback(const cv::Mat & img, const std_msgs::msg::
 
     armor_msg.distance_to_image_center = pos_solver_->calculateDistance2Center(armor.center);
 
-    // armor_marker_msg_.id++;
-    // armor_marker_msg_.scale.y = (armor.size_type == Armor::ArmorSizeType::SMALL) ? 0.135 : 0.23;
-    // armor_marker_msg_.pose = armor_msg.pose;
-    // class_marker_msg_.id++;
-    // class_marker_msg_.pose.position = armor_msg.pose.position;
-    // class_marker_msg_.pose.position.y -= 0.1;
-    // class_marker_msg_.text = armor.classification_result;
+    armor_marker_msg_.id++;
+    armor_marker_msg_.scale.y = (armor.size_type == Armor::ArmorSizeType::SMALL) ? 0.135 : 0.23;
+    armor_marker_msg_.pose = armor_msg.pose;
+    class_marker_msg_.id++;
+    class_marker_msg_.pose.position = armor_msg.pose.position;
+    class_marker_msg_.pose.position.y -= 0.1;
+    class_marker_msg_.text = armor.classification_result;
 
     armors_msg_.armors.emplace_back(armor_msg);
-    // marker_array_msg_.markers.emplace_back(armor_marker_msg_);
-    // marker_array_msg_.markers.emplace_back(class_marker_msg_);
+    marker_array_msg_.markers.emplace_back(armor_marker_msg_);
+    marker_array_msg_.markers.emplace_back(class_marker_msg_);
   }
 
   armors_pub_->publish(armors_msg_);
   auto latency = (node_->now() - header.stamp).seconds() * 1000;
-  RCLCPP_INFO_STREAM(node_->get_logger(), "Comm latency: " << latency << "ms");
+  RCLCPP_INFO_STREAM(node_->get_logger(), "Detector latency: " << latency << "ms");
 
-  // using Marker = visualization_msgs::msg::Marker;
-  // armor_marker_msg_.action = armors_msg_.armors.empty() ? Marker::DELETE : Marker::ADD;
-  // marker_array_msg_.markers.emplace_back(armor_marker_msg_);
-  // marker_pub_->publish(marker_array_msg_);
+  using Marker = visualization_msgs::msg::Marker;
+  armor_marker_msg_.action = armors_msg_.armors.empty() ? Marker::DELETE : Marker::ADD;
+  marker_array_msg_.markers.emplace_back(armor_marker_msg_);
+  marker_pub_->publish(marker_array_msg_);
 }
 
 }  // namespace solais_auto_aim

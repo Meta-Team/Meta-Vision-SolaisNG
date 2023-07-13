@@ -56,6 +56,10 @@ private:
 
   // Position Solver
   std::unique_ptr<PosSolver> pos_solver_;
+
+  // Debug Mode
+  bool debug_mode_{false};
+  image_transport::Publisher debug_img_pub_;
 };
 
 }  // namespace solais_auto_aim
