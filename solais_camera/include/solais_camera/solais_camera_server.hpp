@@ -49,6 +49,7 @@ private:
   int reopen_cnt{0};
   // Camera Parameters
   std::shared_ptr<CamParam> _params;
+  std::thread _pub_thread;
 };
 }  // namespace solais_camera
 
