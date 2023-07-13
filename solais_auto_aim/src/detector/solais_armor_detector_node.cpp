@@ -18,8 +18,8 @@ namespace solais_auto_aim
 {
 ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
 {
-  debug_mode_ = node_->declare_parameter<bool>("debug", false);
   node_ = std::make_shared<rclcpp::Node>("armor_detector", options);
+  debug_mode_ = node_->declare_parameter<bool>("debug", false);
   RCLCPP_INFO(node_->get_logger(), "Starting Armor Detector Node...");
 
   armors_.reserve(100);  // Pre-allocate 100 armors
