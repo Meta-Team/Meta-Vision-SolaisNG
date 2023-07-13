@@ -71,11 +71,10 @@ rclcpp_components_register_node(ip_camera_component
 add_library(mindvision_camera_component SHARED
   src/mindvision_camera/solais_mindvision_camera.cpp
   src/mindvision_camera/solais_mindvision_camera_node.cpp)
-target_link_libraries(mindvision_camera_component ${PROJECT_NAME})
+target_link_libraries(mindvision_camera_component PRIVATE ${PROJECT_NAME} MVSDK)
 target_include_directories(mindvision_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/mvsdk/include>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(mindvision_camera_component MVSDK)
 rclcpp_components_register_node(mindvision_camera_component
   PLUGIN "solais_camera::MindVisionCameraNode"
   EXECUTABLE mindvision_camera_node)
