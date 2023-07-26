@@ -27,7 +27,11 @@ ament_target_dependencies(solais_serial_legacy
   rclcpp
   rclcpp_components
   serial_driver
-  solais_interfaces
+  auto_aim_interfaces
+  rmoss_projectile_motion
+  tf2_ros
+  tf2_geometry_msgs
+  visualization_msgs
 )
 
 
