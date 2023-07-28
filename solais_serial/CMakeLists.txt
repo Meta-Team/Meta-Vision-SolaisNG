@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(solais_serial_legacy SHARED
   src/solais_serial_legacy.cpp

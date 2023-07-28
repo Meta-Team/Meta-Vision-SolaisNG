@@ -8,6 +8,8 @@
 #include <limits>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Quaternion.h>
+#include "rmoss_projectile_motion/gravity_projectile_solver.hpp"
+#include "rmoss_projectile_motion/gaf_projectile_solver.hpp"
 
 namespace solais_serial
 {
@@ -28,6 +30,19 @@ SerialNodeLegacy::SerialNodeLegacy(const rclcpp::NodeOptions & options)
   serial_driver_->init_port(device_name_, *device_config_);
   if (!serial_driver_->port()->is_open()) {
     serial_driver_->port()->open();
+    receive_thread_ = std::thread(&SerialNodeLegacy::receivePackage, this);
+  }
+
+  RCLCPP_INFO(node_->get_logger(), "Projectile motion solver type: %s", solver_type_.c_str());
+  if (solver_type_ == "gravity") {
+    solver_ = std::make_shared<rmoss_projectile_motion::GravityProjectileSolver>(shoot_speed_);
+  } else if (solver_type_ == "gaf") {
+    friction_ = node_->declare_parameter("projectile.friction", 0.001);
+    solver_ =
+      std::make_shared<rmoss_projectile_motion::GafProjectileSolver>(shoot_speed_, friction_);
+  } else {
+    RCLCPP_ERROR(node_->get_logger(), "Unknown solver type: %s", solver_type_.c_str());
+    return;
   }
 
   aiming_point_.header.frame_id = "odom";
@@ -43,13 +58,17 @@ SerialNodeLegacy::SerialNodeLegacy(const rclcpp::NodeOptions & options)
 
 
   armors_sub_ = node_->create_subscription<auto_aim_interfaces::msg::Target>(
-    "/detector/armors", rclcpp::SensorDataQoS(), [this](const auto_aim_interfaces::msg::Target::SharedPtr msg) {
+    "/tracker/target", rclcpp::SensorDataQoS(), [this](const auto_aim_interfaces::msg::Target::SharedPtr msg) {
       sendPackage(msg);
     });
 }
 
 SerialNodeLegacy::~SerialNodeLegacy()
 {
+  if (receive_thread_.joinable()) {
+    receive_thread_.join();
+  }
+
   if (serial_driver_->port()->is_open()) {
     serial_driver_->port()->close();
   }
@@ -136,28 +155,46 @@ void SerialNodeLegacy::receivePackage()
         bool crc16_check = verifyCRC16CheckSum(reinterpret_cast<uint8_t *>(&package), sizeof(ReceivedPackage));
 
         if (crc16_check) {
-          RCLCPP_INFO(node_->get_logger(), "Yaw: %f, Pitch: %f", package.yaw, package.pitch);
+          // RCLCPP_INFO(node_->get_logger(), "Yaw: %f, Pitch: %f", package.yaw, package.pitch);
+          cur_pitch_ = package.pitch / 180. * M_PI;
+          cur_yaw_ = package.yaw / 180. * M_PI;
+
+          geometry_msgs::msg::TransformStamped t;
+            timestamp_offset_ = node_->get_parameter("timestamp_offset").as_double();
+            t.header.stamp = node_->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
+            t.header.frame_id = "odom";
+            t.child_frame_id = "gimbal_link";
+            tf2::Quaternion q;
+            q.setRPY(0., package.pitch / 180. * M_PI, package.yaw / 180. * M_PI);
+            t.transform.rotation = tf2::toMsg(q);
+            tf_broadcaster_->sendTransform(t);
         } else {
           RCLCPP_ERROR(node_->get_logger(), "CRC16 check failed");
         }
-
-        cur_pitch_ = package.pitch;
-        cur_yaw_ = package.yaw;
-
-        geometry_msgs::msg::TransformStamped t;
-          timestamp_offset_ = node_->get_parameter("timestamp_offset").as_double();
-          t.header.stamp = node_->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
-          t.header.frame_id = "odom";
-          t.child_frame_id = "gimbal_link";
-          tf2::Quaternion q;
-          q.setRPY(0., package.pitch, package.yaw);
-          t.transform.rotation = tf2::toMsg(q);
-          tf_broadcaster_->sendTransform(t);
       } else {
         RCLCPP_WARN_THROTTLE(node_->get_logger(), *(node_->get_clock()), 20, "Invalid header: %02X", header[0]);
       }
     } catch (const std::exception & e) {
-      RCLCPP_ERROR(node_->get_logger(), "Error receiving data: %s", e.what());
+      RCLCPP_ERROR_THROTTLE(node_->get_logger(), *(node_->get_clock()), 20, "Error receiving data: %s", e.what());
+      reopenPort();
+    }
+  }
+}
+
+void SerialNodeLegacy::reopenPort()
+{
+  RCLCPP_WARN(node_->get_logger(), "Attempting to reopen port");
+  try {
+    if (serial_driver_->port()->is_open()) {
+      serial_driver_->port()->close();
+    }
+    serial_driver_->port()->open();
+    RCLCPP_INFO(node_->get_logger(), "Successfully reopened port");
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(node_->get_logger(), "Error while reopening port: %s", ex.what());
+    if (rclcpp::ok()) {
+      rclcpp::sleep_for(std::chrono::seconds(1));
+      reopenPort();
     }
   }
 }
@@ -239,22 +276,22 @@ void SerialNodeLegacy::sendPackage(const auto_aim_interfaces::msg::Target::Share
   aiming_point_.pose.position.z = final_z;
   marker_pub_->publish(aiming_point_);
 
-  try {
-    SentPackage package;
+  // try {
+  //   SentPackage package;
 
-    package.sof = 0xA5;
-    package.pitch = hit_pitch + offset_pitch_;
-    package.yaw = hit_yaw + offset_yaw_;
-    appendCRC8CheckSum((uint8_t *) (&package), sizeof(SentPackage));
+  //   package.sof = 0xA5;
+  //   // package.pitch = hit_pitch + offset_pitch_;
+  //   // package.yaw = hit_yaw + offset_yaw_;
+  //   // appendCRC8CheckSum((uint8_t *) (&package), sizeof(SentPackage));
 
-    std::vector<uint8_t> package_vec = Pak2Vector(package);
-    serial_driver_->port()->send(package_vec);
+  //   // std::vector<uint8_t> package_vec = Pak2Vector(package);
+  //   // serial_driver_->port()->send(package_vec);
 
-    auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
-    RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
-  } catch (const std::exception & e) {
-    RCLCPP_ERROR(node_->get_logger(), "Error sending data: %s", e.what());
-  }
+  //   auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
+  //   RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
+  // } catch (const std::exception & e) {
+  //   RCLCPP_ERROR(node_->get_logger(), "Error sending data: %s", e.what());
+  // }
 }
 
 }

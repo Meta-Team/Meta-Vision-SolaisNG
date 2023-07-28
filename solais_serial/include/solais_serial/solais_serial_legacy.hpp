@@ -33,6 +33,8 @@ private:
 
   void sendPackage(const auto_aim_interfaces::msg::Target::SharedPtr msg);
 
+  void reopenPort();
+
   rclcpp::Node::SharedPtr node_;
 
   std::unique_ptr<IoContext> io_context_;
@@ -47,6 +49,7 @@ private:
   // Debug
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
   visualization_msgs::msg::Marker aiming_point_;
+  std::thread receive_thread_;
 
 
   // For projectile prediction
@@ -77,8 +80,8 @@ struct __attribute__((packed, aligned(1))) SentPackage
 struct __attribute__((packed, aligned(1))) ReceivedPackage
 {
   uint8_t sof = 0x5A;  // Start of frame
-  float yaw;
-  float pitch;
+  float yaw;  // Yaw -180 to 180, counterclockwise is positive
+  float pitch;  // Pitch -20 to 5, going up is negative
   uint16_t crc16;
 };
 
@@ -88,7 +91,7 @@ enum class CommandID : uint8_t
   CMD_ID_COUNT
 };
 
-std::vector<uint8_t> Pak2Vector(const SentPackage & data)
+inline std::vector<uint8_t> Pak2Vector(const SentPackage & data)
 {
   std::vector<uint8_t> package(sizeof(SentPackage));
   std::copy(
@@ -97,7 +100,7 @@ std::vector<uint8_t> Pak2Vector(const SentPackage & data)
   return package;
 }
 
-ReceivedPackage Vector2Pak(const std::vector<uint8_t> & data)
+inline ReceivedPackage Vector2Pak(const std::vector<uint8_t> & data)
 {
   ReceivedPackage package;
   std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&package));
