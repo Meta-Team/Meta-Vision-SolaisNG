@@ -170,8 +170,12 @@ inline void CameraServer::startTimer()
         }
       };
   }
-  auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / _params->fps));
-  _timer = _node->create_wall_timer(period_ms, timer_callback);
+  _pub_thread = std::thread(
+    [timer_callback]() {
+      while (true) {
+        timer_callback();
+      }
+    });
 }
 
 inline void CameraServer::startService()

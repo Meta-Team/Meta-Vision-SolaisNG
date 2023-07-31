@@ -9,22 +9,6 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
-message(STATUS "System architecture: ${CMAKE_SYSTEM_PROCESSOR}")
-
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-    set(MVSDK_LIB_DIR "mvsdk/lib/x64")
-    link_directories("mvsdk/lib/x64")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-    set(MVSDK_LIB_DIR "mvsdk/lib/arm64")
-    link_directories("mvsdk/lib/arm64")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-    set(MVSDK_LIB_DIR "mvsdk/lib/arm64")
-    link_directories("mvsdk/lib/arm64")
-else()
-    message(FATAL_ERROR "Unkown host system architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}!")
-endif()
-set(MVSDK_LIB_SO "${PROJECT_SOURCE_DIR}/${MVSDK_LIB_DIR}/libMVSDK.so")
-
 
 # Build server and client
 add_library(${PROJECT_NAME} SHARED
@@ -49,33 +33,48 @@ add_library(usb_camera_component SHARED
   src/usb_camera/solais_usb_camera.cpp
   src/usb_camera/solais_usb_camera_node.cpp)
 target_link_libraries(usb_camera_component ${PROJECT_NAME})
-rclcpp_components_register_node(usb_camera_component
-  PLUGIN "solais_camera::USBCameraNode"
-  EXECUTABLE usb_camera_node)
 target_include_directories(usb_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+rclcpp_components_register_node(usb_camera_component
+  PLUGIN "solais_camera::USBCameraNode"
+  EXECUTABLE usb_camera_node)
 
 # Build ip_camera
 add_library(ip_camera_component SHARED
   src/ip_camera/solais_ip_camera.cpp
   src/ip_camera/solais_ip_camera_node.cpp)
 target_link_libraries(ip_camera_component ${PROJECT_NAME})
-rclcpp_components_register_node(ip_camera_component
-  PLUGIN "solais_camera::IPCameraNode"
-  EXECUTABLE ip_camera_node)
 target_include_directories(ip_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+rclcpp_components_register_node(ip_camera_component
+  PLUGIN "solais_camera::IPCameraNode"
+  EXECUTABLE ip_camera_node)
 
 add_library(mindvision_camera_component SHARED
   src/mindvision_camera/solais_mindvision_camera.cpp
   src/mindvision_camera/solais_mindvision_camera_node.cpp)
-target_link_libraries(mindvision_camera_component ${PROJECT_NAME})
+
+message(STATUS "System architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+    set(MVSDK_LIB_DIR "mvsdk/lib/x64")
+    target_link_directories(mindvision_camera_component PUBLIC "mvsdk/lib/x64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    set(MVSDK_LIB_DIR "mvsdk/lib/arm64")
+    target_link_directories(mindvision_camera_component PUBLIC "mvsdk/lib/arm64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    set(MVSDK_LIB_DIR "mvsdk/lib/arm64")
+    target_link_directories(mindvision_camera_component PUBLIC "mvsdk/lib/arm64")
+else()
+    message(FATAL_ERROR "Unkown host system architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}!")
+endif()
+set(MVSDK_LIB_SO "${PROJECT_SOURCE_DIR}/${MVSDK_LIB_DIR}/libMVSDK.so")
+target_link_libraries(mindvision_camera_component PRIVATE ${PROJECT_NAME} MVSDK)
 target_include_directories(mindvision_camera_component PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/mvsdk/include>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(mindvision_camera_component MVSDK)
 rclcpp_components_register_node(mindvision_camera_component
   PLUGIN "solais_camera::MindVisionCameraNode"
   EXECUTABLE mindvision_camera_node)
