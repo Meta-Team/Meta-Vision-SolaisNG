@@ -276,22 +276,25 @@ void SerialNodeLegacy::sendPackage(const auto_aim_interfaces::msg::Target::Share
   aiming_point_.pose.position.z = final_z;
   marker_pub_->publish(aiming_point_);
 
-  // try {
-  //   SentPackage package;
+  try {
+    SentPackage package;
 
-  //   package.sof = 0xA5;
-  //   // package.pitch = hit_pitch + offset_pitch_;
-  //   // package.yaw = hit_yaw + offset_yaw_;
-  //   // appendCRC8CheckSum((uint8_t *) (&package), sizeof(SentPackage));
+    package.sof = 0xA5;
+    // hit_pitch = 0;
+    package.pitch = (hit_pitch + offset_pitch_) / M_PI * 180;
+    package.yaw = (hit_yaw + offset_yaw_) / M_PI * 180;
+    appendCRC8CheckSum((uint8_t *) (&package), sizeof(SentPackage));
 
-  //   // std::vector<uint8_t> package_vec = Pak2Vector(package);
-  //   // serial_driver_->port()->send(package_vec);
+    std::vector<uint8_t> package_vec = Pak2Vector(package);
+    serial_driver_->port()->send(package_vec);
 
-  //   auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
-  //   RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
-  // } catch (const std::exception & e) {
-  //   RCLCPP_ERROR(node_->get_logger(), "Error sending data: %s", e.what());
-  // }
+    RCLCPP_INFO(node_->get_logger(), " Target Yaw: %f, Target Pitch: %f", package.yaw, package.pitch);
+
+    auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
+    RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(node_->get_logger(), "Error sending data: %s", e.what());
+  }
 }
 
 }
