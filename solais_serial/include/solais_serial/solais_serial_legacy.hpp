@@ -35,6 +35,8 @@ private:
 
   void reopenPort();
 
+  double calculateMinAngleDiff(double & angle1, double & angle2);
+
   rclcpp::Node::SharedPtr node_;
 
   std::unique_ptr<IoContext> io_context_;
@@ -53,8 +55,9 @@ private:
 
 
   // For projectile prediction
-  float cur_pitch_ = 0.;
-  float cur_yaw_ = 0.;
+  double cur_pitch_ = 0.;
+  double cur_yaw_ = 0.;
+  double cur_yaw_cropped_ = 0.;  // cur_yaw_ in range [-pi, pi)
   double offset_x_;
   double offset_y_;
   double offset_z_;
