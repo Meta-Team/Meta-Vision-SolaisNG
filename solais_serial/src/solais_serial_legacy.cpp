@@ -7,6 +7,7 @@
 #include "solais_serial/crc.h"
 #include <limits>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include "rmoss_projectile_motion/gravity_projectile_solver.hpp"
 #include "rmoss_projectile_motion/gaf_projectile_solver.hpp"
@@ -155,7 +156,7 @@ void SerialNodeLegacy::receivePackage()
         bool crc16_check = verifyCRC16CheckSum(reinterpret_cast<uint8_t *>(&package), sizeof(ReceivedPackage));
 
         if (crc16_check) {
-          // RCLCPP_INFO(node_->get_logger(), "Yaw: %f, Pitch: %f", package.yaw, package.pitch);
+          RCLCPP_INFO(node_->get_logger(), "Yaw: %f, Pitch: %f", package.yaw, package.pitch);
           cur_pitch_ = package.pitch / 180. * M_PI;
           cur_yaw_ = package.yaw / 180. * M_PI;
 
@@ -167,7 +168,12 @@ void SerialNodeLegacy::receivePackage()
             tf2::Quaternion q;
             q.setRPY(0., package.pitch / 180. * M_PI, package.yaw / 180. * M_PI);
             t.transform.rotation = tf2::toMsg(q);
+            tf2::Matrix3x3 m(q);
+            double tmp_pitch, tmp_roll, tmp_yaw;
+            m.getRPY(tmp_roll, tmp_pitch, tmp_yaw);
+            cur_yaw_cropped_ = tmp_yaw;  // Get cropped yaw
             tf_broadcaster_->sendTransform(t);
+          RCLCPP_INFO(node_->get_logger(), " TF2 Yaw: %f", tmp_yaw / M_PI * 180.0);
         } else {
           RCLCPP_ERROR(node_->get_logger(), "CRC16 check failed");
         }
@@ -257,9 +263,9 @@ void SerialNodeLegacy::sendPackage(const auto_aim_interfaces::msg::Target::Share
     if (::abs(
         ::fmod(
           tmp_yaw,
-          M_PI) - cur_yaw_) < min_yaw && target_predict_position.head(2).norm() < min_dis)
+          M_PI) - cur_yaw_cropped_) < min_yaw && target_predict_position.head(2).norm() < min_dis)
     {
-      min_yaw = ::abs(::fmod(tmp_yaw, M_PI) - cur_yaw_);
+      min_yaw = ::abs(::fmod(tmp_yaw, M_PI) - cur_yaw_cropped_);
       min_dis = target_predict_position.head(2).norm();
       hit_yaw = target_yaw;
       hit_pitch = target_pitch;
@@ -276,22 +282,36 @@ void SerialNodeLegacy::sendPackage(const auto_aim_interfaces::msg::Target::Share
   aiming_point_.pose.position.z = final_z;
   marker_pub_->publish(aiming_point_);
 
-  // try {
-  //   SentPackage package;
+  try {
+    SentPackage package;
 
-  //   package.sof = 0xA5;
-  //   // package.pitch = hit_pitch + offset_pitch_;
-  //   // package.yaw = hit_yaw + offset_yaw_;
-  //   // appendCRC8CheckSum((uint8_t *) (&package), sizeof(SentPackage));
+    package.sof = 0xA5;
+    package.pitch = (hit_pitch + offset_pitch_) / M_PI * 180;
+    double yaw_diff = calculateMinAngleDiff(hit_yaw, cur_yaw_cropped_);
+    package.yaw = (yaw_diff + cur_yaw_ + offset_yaw_) / M_PI * 180;
+    appendCRC8CheckSum((uint8_t *) (&package), sizeof(SentPackage));
 
-  //   // std::vector<uint8_t> package_vec = Pak2Vector(package);
-  //   // serial_driver_->port()->send(package_vec);
+    std::vector<uint8_t> package_vec = Pak2Vector(package);
+    // serial_driver_->port()->send(package_vec);
 
-  //   auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
-  //   RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
-  // } catch (const std::exception & e) {
-  //   RCLCPP_ERROR(node_->get_logger(), "Error sending data: %s", e.what());
-  // }
+    RCLCPP_INFO(node_->get_logger(), " Target Yaw: %f, Target Pitch: %f", package.yaw, package.pitch);
+
+    auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
+    RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(node_->get_logger(), "Error sending data: %s", e.what());
+  }
+}
+
+double SerialNodeLegacy::calculateMinAngleDiff(double & angle1, double & angle2)
+{
+  double diff = angle1 - angle2;
+  if (diff > M_PI) {
+    diff -= 2 * M_PI;
+  } else if (diff < -M_PI) {
+    diff += 2 * M_PI;
+  }
+  return diff;
 }
 
 }
