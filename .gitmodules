@@ -1,0 +1,12 @@
+[submodule "rmoss_interfaces"]
+	path = rmoss_interfaces
+	url = https://github.com/robomaster-oss/rmoss_interfaces
+[submodule "rmoss_core"]
+	path = rmoss_core
+	url = https://github.com/robomaster-oss/rmoss_core
+[submodule "rm_vision_ros2_mindvision_camera"]
+	path = rm_vision_ros2_mindvision_camera
+	url = https://github.com/rm-vision-archive/rm_vision_ros2_mindvision_camera
+[submodule "rm_auto_aim"]
+	path = rm_auto_aim
+	url = https://github.com/rm-vision-archive/rm_auto_aim
