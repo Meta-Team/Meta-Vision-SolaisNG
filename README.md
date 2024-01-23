@@ -36,6 +36,20 @@ no one could escape its blows.
 * TensorRT >= 8.5.2 (used for YOLOv5)
 * ROS Humble
 
+# Clone
+
+This project contains multiple submodules. They are all necessary for compilation.
+
+To clone this project and all the submodules, run the following:
+
+```shell
+mkdir Meta-Vision-SolaisNG # can be renamed
+cd Meta-Vision-SolaisNG
+git clone --recurse-submodules https://github.com/Meta-Team/Meta-Vision-SolaisNG src # clone to the directory `src`
+git submodule init
+git submodule update --recursive # download all submodules
+```
+
 # Setup on Jetson Orin Nano (Ubuntu 20.04)
 
 Please refer to this [page](https://github.com/Meta-Team/Meta-Vision-SolaisNG/wiki/Setup-on-Jetson-Orin-Nano-(Ubuntu-20.04)) for further information.
