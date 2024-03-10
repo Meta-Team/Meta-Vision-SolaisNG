@@ -2,6 +2,11 @@
 #include "solais_interpreter/solais_interpreter.hpp"
 
 #include "solais_interpreter/crc.h"
+#include <functional>
+#include <geometry_msgs/msg/detail/transform_stamped__struct.hpp>
+#include <geometry_msgs/msg/detail/vector3__struct.hpp>
+#include <rclcpp/create_subscription.hpp>
+#include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -17,15 +22,17 @@ SolaisInterpreter::SolaisInterpreter(const rclcpp::NodeOptions & options)
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*node_);
     marker_pub_ = node_->create_publisher<visualization_msgs::msg::Marker>("/aiming_point", 10);
 
-    receive_thread_ = std::thread(&SolaisInterpreter::receivePackage, this);
+    // receive_thread_ = std::thread(&SolaisInterpreter::rx_msg, this);
+    imu_sub_ = node_->create_subscription<geometry_msgs::msg::Vector3>(
+        "euler_angles", 10,
+        std::bind(&SolaisInterpreter::rx_msg, this, std::placeholders::_1));
 
     RCLCPP_INFO(node_->get_logger(), "Projectile motion solver type: %s", solver_type_.c_str());
     if (solver_type_ == "gravity") {
         solver_ = std::make_shared<rmoss_projectile_motion::GravityProjectileSolver>(shoot_speed_);
     } else if (solver_type_ == "gaf") {
         friction_ = node_->declare_parameter("projectile.friction", 0.001);
-        solver_ =
-        std::make_shared<rmoss_projectile_motion::GafProjectileSolver>(shoot_speed_, friction_);
+        solver_ = std::make_shared<rmoss_projectile_motion::GafProjectileSolver>(shoot_speed_, friction_);
     } else {
         RCLCPP_ERROR(node_->get_logger(), "Unknown solver type: %s", solver_type_.c_str());
         return;
@@ -44,14 +51,14 @@ SolaisInterpreter::SolaisInterpreter(const rclcpp::NodeOptions & options)
 
     armors_sub_ = node_->create_subscription<auto_aim_interfaces::msg::Target>(
     "/tracker/target", rclcpp::SensorDataQoS(), [this](const auto_aim_interfaces::msg::Target::SharedPtr msg) {
-      sendPackage(msg);
+        tx_msg(msg);
     });
 }
 
 SolaisInterpreter::~SolaisInterpreter()
 {
-    if (receive_thread_.joinable())
-        receive_thread_.join();
+    // if (receive_thread_.joinable())
+    //     receive_thread_.join();
 }
 
 auto SolaisInterpreter::get_node_base_interface() const
@@ -71,12 +78,29 @@ void SolaisInterpreter::declareParameters()
     solver_type_ = node_->declare_parameter("projectile.solver_type", "gravity");
 }
 
-void SolaisInterpreter::receivePackage()
+void SolaisInterpreter::rx_msg(const geometry_msgs::msg::Vector3::SharedPtr msg)
 {
-    // TODO: Implement this function
+    cur_pitch_ = msg->y;
+    cur_yaw_ = msg->z;
+    RCLCPP_INFO(node_->get_logger(), "Yaw: %f, Pitch; %f", cur_yaw_, cur_pitch_);
+
+    geometry_msgs::msg::TransformStamped t;
+        timestamp_offset_ = node_->get_parameter("timestamp_offset").as_double();
+        t.header.stamp = node_->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
+        t.header.frame_id = "odom";
+        t.child_frame_id = "gimbal_link";
+        tf2::Quaternion q;
+        q.setRPY(0.0, cur_pitch_, cur_yaw_);
+        t.transform.rotation = tf2::toMsg(q);
+        tf2::Matrix3x3 m(q);
+        double tmp_pitch, tmp_roll, tmp_yaw;
+        m.getRPY(tmp_roll, tmp_pitch, tmp_yaw);
+        cur_yaw_cropped_ = tmp_yaw;
+        tf_broadcaster_->sendTransform(t);
+    RCLCPP_INFO(node_->get_logger(), "TF2 Yaw: %f", tmp_yaw);
 }
 
-void SolaisInterpreter::sendPackage(const auto_aim_interfaces::msg::Target::SharedPtr msg)
+void SolaisInterpreter::tx_msg(const auto_aim_interfaces::msg::Target::SharedPtr msg)
 {
     if (!msg->tracking) {
         return;
