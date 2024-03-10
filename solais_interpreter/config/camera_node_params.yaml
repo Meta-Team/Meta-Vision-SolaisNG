@@ -1,5 +1,5 @@
 analog_gain: 8
-camera_info_url: package://rm_vision_bringup/config/camera_info.yaml
+camera_info_url: package://solais_interpreter/config/camera_info.yaml
 camera_name: mv_camera
 exposure_time: 2000
 flip_image: false

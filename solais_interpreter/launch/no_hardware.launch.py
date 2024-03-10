@@ -1,7 +1,7 @@
 import os
 import sys
 from ament_index_python.packages import get_package_share_directory
-sys.path.append(os.path.join(get_package_share_directory('rm_vision_bringup'), 'launch'))
+sys.path.append(os.path.join(get_package_share_directory('solais_interpreter'), 'launch'))
 
 
 def generate_launch_description():

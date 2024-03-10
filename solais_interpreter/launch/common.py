@@ -6,7 +6,7 @@ from launch.substitutions import Command
 from launch_ros.actions import Node
 
 launch_params = yaml.safe_load(open(os.path.join(
-    get_package_share_directory('rm_vision_bringup'), 'config', 'launch_params.yaml')))
+    get_package_share_directory('solais_interpreter'), 'config', 'launch_params.yaml')))
 
 robot_description = Command(['xacro ', os.path.join(
     get_package_share_directory('rm_gimbal_description'), 'urdf', 'rm_gimbal.urdf.xacro'),
@@ -20,7 +20,7 @@ robot_state_publisher = Node(
 )
 
 node_params = os.path.join(
-    get_package_share_directory('rm_vision_bringup'), 'config', 'node_params.yaml')
+    get_package_share_directory('solais_interpreter'), 'config', 'node_params.yaml')
 
 tracker_node = Node(
     package='armor_tracker',

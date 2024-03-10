@@ -1,6 +1,6 @@
 /camera_node:
   ros__parameters:
-    camera_info_url: package://rm_vision_bringup/config/camera_info.yaml
+    camera_info_url: package://solais_interpreter/config/camera_info.yaml
     exposure_time: 3000
     analog_gain: 8
     use_sensor_data_qos: true

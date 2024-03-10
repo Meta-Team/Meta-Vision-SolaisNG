@@ -1,7 +1,7 @@
 import os
 import sys
 from ament_index_python.packages import get_package_share_directory
-sys.path.append(os.path.join(get_package_share_directory('rm_vision_bringup'), 'launch'))
+sys.path.append(os.path.join(get_package_share_directory('solais_interpreter'), 'launch'))
 
 
 def generate_launch_description():
@@ -52,19 +52,6 @@ def generate_launch_description():
     elif (launch_params['camera'] == 'mv'):
         cam_detector = get_camera_detector_container(mv_camera_node)
 
-    serial_driver_node = Node(
-        # package='rm_serial_driver',
-        package='solais_serial',
-        # executable='rm_serial_driver_node',
-        executable='solais_serial_legacy_node',
-        name='serial_driver',
-        output='both',
-        emulate_tty=True,
-        parameters=[node_params],
-        on_exit=Shutdown(),
-        ros_arguments=['--ros-args', '--log-level',
-                       'serial_driver:='+launch_params['serial_log_level']],
-    )
 
     interpreter_node = Node(
         package='solais_interpreter',
@@ -72,10 +59,6 @@ def generate_launch_description():
         name='solais_interpreter',
     )
 
-    delay_serial_node = TimerAction(
-        period=1.5,
-        actions=[serial_driver_node],
-    )
 
     delay_interpreter_node = TimerAction(
         period=1.5,
@@ -90,7 +73,6 @@ def generate_launch_description():
     return LaunchDescription([
         robot_state_publisher,
         cam_detector,
-        # delay_serial_node,
         delay_interpreter_node,
         delay_tracker_node,
     ])
