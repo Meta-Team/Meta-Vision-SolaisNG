@@ -9,6 +9,7 @@
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <vision_interface/msg/detail/auto_aim__struct.hpp>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include "rmoss_projectile_motion/gravity_projectile_solver.hpp"
@@ -26,6 +27,7 @@ SolaisInterpreter::SolaisInterpreter(const rclcpp::NodeOptions & options)
     imu_sub_ = node_->create_subscription<geometry_msgs::msg::Vector3>(
         "euler_angles", 10,
         std::bind(&SolaisInterpreter::rx_msg, this, std::placeholders::_1));
+    aim_pub_ = node_->create_publisher<vision_interface::msg::AutoAim>("auto_aim", 10);
 
     RCLCPP_INFO(node_->get_logger(), "Projectile motion solver type: %s", solver_type_.c_str());
     if (solver_type_ == "gravity") {
@@ -177,6 +179,17 @@ void SolaisInterpreter::tx_msg(const auto_aim_interfaces::msg::Target::SharedPtr
         marker_pub_->publish(aiming_point_);
 
         // MY_TODO: Publish the target position to the topic
+
+        vision_interface::msg::AutoAim aim_msg;
+        aim_msg.pitch = hit_pitch + offset_pitch_;
+        auto yaw_diff = calculateMinAngleDiff(hit_yaw, cur_yaw_cropped_);
+        aim_msg.yaw = yaw_diff + cur_yaw_ + offset_yaw_;
+        aim_pub_->publish(aim_msg);
+
+        RCLCPP_INFO(node_->get_logger(), " Target Yaw: %f, Target Pitch: %f", aim_msg.yaw, aim_msg.pitch);
+
+        auto latency = (node_->now() - msg->header.stamp).seconds() * 1000.0;
+        RCLCPP_INFO(node_->get_logger(), "Total latency: %f ms", latency);
     }
 }
 

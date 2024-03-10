@@ -33,6 +33,7 @@ ament_target_dependencies(solais_interpreter
   tf2_geometry_msgs
   visualization_msgs
   geometry_msgs
+  vision_interface
 )
 
 

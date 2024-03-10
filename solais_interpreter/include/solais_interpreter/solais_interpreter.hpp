@@ -4,10 +4,12 @@
 #include "auto_aim_interfaces/msg/target.hpp"
 #include "rmoss_projectile_motion/gimbal_transform_tool.hpp"
 #include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/msg/detail/vector3__struct.hpp>
+#include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
+#include <vision_interface/msg/detail/auto_aim__struct.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <Eigen/Dense>
+#include "vision_interface/msg/auto_aim.hpp"
 
 class SolaisInterpreter
 {
@@ -30,6 +32,7 @@ private:
     double timestamp_offset_ = 0;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr imu_sub_;
+    rclcpp::Publisher<vision_interface::msg::AutoAim>::SharedPtr aim_pub_;
 
     // Debug
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
