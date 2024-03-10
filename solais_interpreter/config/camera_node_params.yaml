@@ -1,0 +1,16 @@
+analog_gain: 8
+camera_info_url: package://rm_vision_bringup/config/camera_info.yaml
+camera_name: mv_camera
+exposure_time: 2000
+flip_image: false
+gamma: 90
+qos_overrides./parameter_events.publisher.depth: 1000
+qos_overrides./parameter_events.publisher.durability: volatile
+qos_overrides./parameter_events.publisher.history: keep_last
+qos_overrides./parameter_events.publisher.reliability: reliable
+rgb_gain.b: 100
+rgb_gain.g: 100
+rgb_gain.r: 100
+saturation: 70
+use_sensor_data_qos: true
+use_sim_time: false

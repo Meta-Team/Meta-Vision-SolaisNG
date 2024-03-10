@@ -1,0 +1,63 @@
+/camera_node:
+  ros__parameters:
+    camera_info_url: package://rm_vision_bringup/config/camera_info.yaml
+    exposure_time: 3000
+    analog_gain: 8
+    use_sensor_data_qos: true
+    rgb_gain.b: 100
+    rgb_gain.g: 100
+    rgb_gain.r: 100
+    saturation: 70
+    gamma: 90
+
+/serial_driver:
+  ros__parameters:
+    timestamp_offset: 0.006
+    device_name: /dev/ttyUSB0
+    baud_rate: 115200
+    flow_control: none
+    parity: none
+    stop_bits: "1"
+    projectile.initial_speed: 10.5
+    projectile.offset_pitch: 0.03490658503988659
+    projectile.offset_time: 0.002
+
+# Serial Wire Config:
+# Red - GND
+# Yellow - RX
+# Orange - TX
+# Brown - VCC
+
+/armor_detector:
+  ros__parameters:
+    debug: true
+
+    detect_color: 1
+    binary_thres: 80
+
+    light.min_ratio: 0.1
+    armor.min_light_ratio: 0.8
+
+    classifier_threshold: 0.8
+    ignore_classes: ["negative"]
+
+/armor_tracker:
+  ros__parameters:
+    target_frame: odom
+    max_armor_distance: 10.0
+
+    ekf:
+      sigma2_q_xyz: 0.05
+      sigma2_q_yaw: 5.0
+      sigma2_q_r: 80.0
+
+      r_xyz_factor: 4e-4
+      r_yaw: 5e-3
+
+    tracker:
+      max_match_distance: 0.5
+      max_match_yaw_diff: 1.0
+
+      tracking_thres: 5
+      lost_time_thres: 1.0
+      

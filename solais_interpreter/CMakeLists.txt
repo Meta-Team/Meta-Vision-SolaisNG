@@ -9,6 +9,12 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+install(DIRECTORY
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(solais_interpreter SHARED
@@ -35,7 +41,6 @@ ament_target_dependencies(solais_interpreter
   geometry_msgs
   vision_interface
 )
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
