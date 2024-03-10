@@ -19,9 +19,6 @@
 [submodule "rm_gimbal_description"]
 	path = rm_gimbal_description
 	url = https://github.com/rm-vision-archive/rm_gimbal_description
-[submodule "rm_serial_driver"]
-	path = rm_serial_driver
-	url = https://github.com/rm-vision-archive/rm_serial_driver
 [submodule "rm_vision"]
 	path = rm_vision
 	url = https://github.com/Yao-Xinchen/rm_vision
