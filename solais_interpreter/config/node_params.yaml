@@ -1,7 +1,7 @@
 /camera_node:
   ros__parameters:
     camera_info_url: package://solais_interpreter/config/camera_info.yaml
-    exposure_time: 3000
+    exposure_time: 1800
     analog_gain: 8
     use_sensor_data_qos: true
     rgb_gain.b: 100
@@ -18,8 +18,8 @@
     flow_control: none
     parity: none
     stop_bits: "1"
-    projectile.initial_speed: 10.5
-    projectile.offset_pitch: 0.03490658503988659
+    projectile.initial_speed: 25.0
+    projectile.offset_pitch: 0.0
     projectile.offset_time: 0.002
 
 # Serial Wire Config:
@@ -32,13 +32,13 @@
   ros__parameters:
     debug: true
 
-    detect_color: 1
+    detect_color: 0 # 0-red 1-blue
     binary_thres: 80
 
     light.min_ratio: 0.1
     armor.min_light_ratio: 0.8
 
-    classifier_threshold: 0.8
+    classifier_threshold: 0.25
     ignore_classes: ["negative"]
 
 /armor_tracker:
@@ -58,6 +58,6 @@
       max_match_distance: 0.5
       max_match_yaw_diff: 1.0
 
-      tracking_thres: 5
+      tracking_thres: 1
       lost_time_thres: 1.0
       

@@ -19,7 +19,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(solais_interpreter SHARED
   src/solais_interpreter.cpp
-  src/crc.cpp
 )
 target_include_directories(solais_interpreter PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
