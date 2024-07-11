@@ -79,12 +79,12 @@ void SolaisInterpreter::declareParameters()
     offset_time_ = node_->declare_parameter("projectile.offset_time", 0.0);
     shoot_speed_ = node_->declare_parameter("projectile.initial_speed", 15.0);
     solver_type_ = node_->declare_parameter("projectile.solver_type", "gravity");
-} 
+}
 
 void SolaisInterpreter::rx_msg(const geometry_msgs::msg::Vector3::SharedPtr msg)
 {
-    cur_pitch_ = - msg->y;
-    cur_yaw_ = 2 * M_PI - msg->z;
+    cur_pitch_ = msg->y;
+    cur_yaw_ = msg->z;
     // RCLCPP_INFO(node_->get_logger(), "Yaw: %f, Pitch; %f", cur_yaw_, cur_pitch_);
 
     geometry_msgs::msg::TransformStamped t;
@@ -180,7 +180,7 @@ void SolaisInterpreter::tx_msg(const auto_aim_interfaces::msg::Target::SharedPtr
         marker_pub_->publish(aiming_point_);
 
         vision_interface::msg::AutoAim aim_msg;
-        aim_msg.pitch = - hit_pitch + offset_pitch_;
+        aim_msg.pitch = hit_pitch + offset_pitch_;
         auto yaw_diff = calculateMinAngleDiff(hit_yaw, cur_yaw_cropped_);
         aim_msg.yaw = yaw_diff + cur_yaw_ + offset_yaw_;
         aim_pub_->publish(aim_msg);
